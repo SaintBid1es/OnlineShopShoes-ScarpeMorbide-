@@ -1,0 +1,820 @@
+@startuml
+class com.example.testbundle.FavoritePreferences {
+-  sharedPreferences
++ void setFavorite(Int,Boolean)
++ Boolean isFavorite(Int)
+}
+
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.Favorite {
+}
+class com.example.testbundle.db.Brand {
+}
+class com.example.testbundle.Repository.OrderRepository$Companion {
+- OrderRepository? instance
++ void createInstance(Context)
++ OrderRepository getInstance()
+}
+
+
+class com.example.testbundle.Repository.OrderRepository {
+- Dao dao
++ void deleteItem()
++ void deleteOrderById(Int)
++ void getOrdersByUser(Int)
++ void updateItem(Order)
++ UUID insertItem(Order)
++ Flow<List<Order>> getItems()
+}
+
+
+class com.example.testbundle.Adapter.ProductCardAdapter$AccountHolder {
+}
+class com.example.testbundle.Adapter.ProductCardAdapter {
++ void null()
++ AccountHolder onCreateViewHolder(ViewGroup,Int)
++ void onBindViewHolder(AccountHolder,Int)
++ Int getItemCount()
+}
+
+class com.example.testbundle.Activity.MainActivity$Companion {
++  INITIALIZED_KEY
+}
+
+class com.example.testbundle.Activity.MainActivity {
+- ActivityMainBinding? _binding
+-  binding
++ DataStore<Preferences> prefs
++ void onCreate(Bundle?)
++ void init(MainDb)
++ void exitApp(Context)
+}
+
+
+class com.example.testbundle.Adapter.AccountCardAdapter$AccountHolder {
+}
+class com.example.testbundle.Adapter.AccountCardAdapter {
++ void null()
++ AccountHolder onCreateViewHolder(ViewGroup,Int)
++ Int getItemCount()
++ void onBindViewHolder(AccountHolder,Int)
+}
+
+class com.example.testbundle.Application {
++ void onCreate()
+}
+
+class com.example.testbundle.Repository.CategoryRepository$Companion {
+- CategoryRepository? instance
++ void createInstance(Context)
++ CategoryRepository getInstance()
+}
+
+
+class com.example.testbundle.Repository.CategoryRepository {
+- Dao dao
++ void deleteCategory(Int)
++ void updateCategory(Category)
++ void insertCategory(Category)
++ Flow<List<Category>> getCategory()
++ Category? getCategoryById(Int)
++ Category? getCategoryByName(String)
+}
+
+
+class com.example.testbundle.Repository.BasketRepository$Companion {
+- BasketRepository? instance
++ void createInstance(Context)
++ BasketRepository getInstance()
+}
+
+
+class com.example.testbundle.Repository.BasketRepository {
+- Dao dao
++ void deleteItem()
++ void deleteItemById(Int)
++ void deleteClientItemByProduct(Int,Int)
++ Basket? getBasketItemByProduct(Int,Int)
++ void getItemsByUser(Int)
++ void updateItem(Basket)
++ void insertItem(Basket)
++ Int? isProductInBasket(Int,Int)
++ Flow<List<Basket>> getItems()
+}
+
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.BrandFilter {
+}
+class com.example.testbundle.Activity.User.ListProductActivity$Companion {
++  Boolean
++  EMAIL_KEY
++  PASSWORD_KEY
++ Int idUser
+}
+
+class com.example.testbundle.Activity.User.ListProductActivity {
++ ActivityListProductBinding binding
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
+- FavoritePreferences favoritePreferences
+- ArrayAdapter<String> adapterBrand
+- ArrayAdapter<String> adapterCategory
+- ProductViewModel viewModel
++ void onCreate(Bundle?)
+- void onUpdateView(List<ProductsModel>)
+- void loadData(String?,String?)
+- void setupSearch()
+- void filterProducts(String)
+- void SearchUserId(String?,String?)
+}
+
+
+class com.example.testbundle.Adapter.CategoryAdapter$AccountHolder {
+}
+class com.example.testbundle.Adapter.CategoryAdapter {
++ void null()
++ AccountHolder onCreateViewHolder(ViewGroup,Int)
++ Int getItemCount()
++ void onBindViewHolder(AccountHolder,Int)
+}
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.Products {
+}
+class com.example.testbundle.db.ProductsModel {
+}
+class com.example.testbundle.db.BasketModel {
+}
+class com.example.testbundle.OrderItemViewModel {
+-  repos
+- MutableStateFlow<List<OrderItem>> _stateOrderItem
++ StateFlow<List<OrderItem>> stateOrderItem
++ void deleteOrderItem(Int)
++ void updateOrderItem(OrderItem)
++ void insertOrderItem(OrderItem)
+}
+
+
+class com.example.testbundle.BrandViewModel {
+-  repos
+- MutableStateFlow<List<Brand>> _stateBrand
++ StateFlow<List<Brand>> stateBrand
++ void deleteBrand(Int)
++ void updateBrand(Brand)
++ void insertBrand(Brand)
+}
+
+
+class com.example.testbundle.Adapter.ProductCardUserAdapter$ProductCardUserAdapter {
+}
+class com.example.testbundle.Adapter.ProductCardUserAdapter {
++ void null()
+}
+
+class com.example.testbundle.MainViewModel {
+-  repo
+- MutableStateFlow<List<Item>> _state
++ StateFlow<List<Item>> state
++ void deleteItem(Int)
++ void updateItem(Item)
++ void insertItem(Item)
+}
+
+
+class com.example.testbundle.Activity.Admin.CreateBrandActivity {
++ ActivityCreateBrandBinding binding
++ BrandViewModel viewModel
++ void onCreate(Bundle?)
+}
+
+
+class com.example.testbundle.Activity.Admin.EditAccountCardActivity {
++ ActivityEditAccountCardBinding binding
++ MainViewModel viewModel
++ void onCreate(Bundle?)
+}
+
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.MainDb$Companion {
++ MainDb getDb(Context)
+}
+
+abstract class com.example.testbundle.db.MainDb {
++ Dao getDao()
+}
+
+class com.example.testbundle.Activity.Admin.ListEmployeeActivity {
+- ActivityListEmployeeBinding binding
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
+-  imageIdList
+-  index
+- Int? currentUserId
++ MainViewModel viewModel
++ void onCreate(Bundle?)
+- void onUpdateView(List<Item>)
+- void setupSearch()
+- void filterProducts(String)
+}
+
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.Basket {
+}
+class com.example.testbundle.db.Category {
+}
+class com.example.testbundle.Activity.Admin.BrandAndCategoryViewActivity {
++ ActivityBrandAndCategoryViewBinding binding
++ CategoryViewModel viewModelCategory
++ BrandViewModel viewModelBrand
++ void onCreate(Bundle?)
+- void onUpdateViewBrand(List<Brand>)
+- void onUpdateViewCategory(List<Category>)
+}
+
+
+class com.example.testbundle.Repository.BrandRepository$Companion {
+- BrandRepository? instance
++ void createInstance(Context)
++ BrandRepository getInstance()
+}
+
+
+class com.example.testbundle.Repository.BrandRepository {
+- Dao dao
++ void deleteBrand(Int)
++ void updateBrand(Brand)
++ void insertBrand(Brand)
++ Flow<List<Brand>> getBrand()
++ Brand? getBrandById(Int)
++ Brand? getBrandByName(String)
+}
+
+
+class com.example.testbundle.Adapter.ProductCreateAdapter {
+}
+class com.example.testbundle.Adapter.ProductHolder {
+-  binding
++ void bind(Int,Boolean)
+- void updateSelection(Int)
+}
+
+
+class com.example.testbundle.Activity.User.UpdateInformationActivity$Companion {
++ String newPasswords
+}
+
+class com.example.testbundle.Activity.User.UpdateInformationActivity {
++ ActivityUpdateInformationBinding binding
++ MainViewModel viewModel
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
+- Int? currentUserId
++ void onCreate(Bundle?)
+- void showChangePasswordDialog()
++ void validaciaIsEmpty(EditText)
++ Boolean validatePassword(String?)
+}
+
+
+class com.example.testbundle.Activity.Admin.ListProductAdminActivity {
++ ActivityListProductAdminBinding binding
++ ProductViewModel viewModel
++ void onCreate(Bundle?)
+- void onUpdateView(List<ProductsModel>)
+}
+
+
+class com.example.testbundle.Activity.User.DetailProductActivity$Companion {
++ Int idUser
+}
+
+class com.example.testbundle.Activity.User.DetailProductActivity {
++ ActivityDetailProductBinding binding
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
++ BasketViewModel viewModelBasket
++ void onCreate(Bundle?)
+- void SearchUserId(String?,String?)
++ void initLists()
+}
+
+
+class com.example.testbundle.OrderViewModel {
+-  orderRepository
+-  dataStoreRepo
+- MutableStateFlow<List<OrderModel>> _orderItems
++ StateFlow<List<OrderModel>> orderItems
+-  repos
+-  repos1
++ void insertOrder(Order,(UUID?) -> Unit)
++ void deleteOrder()
++ void getProducts()
+}
+
+
+class com.example.testbundle.Repository.ProductRepository {
+}
+class com.example.testbundle.Repository.null {
+- ProductRepository? instance
++ void createInstance(Context)
++ ProductRepository getInstance()
+}
+
+
+class com.example.testbundle.Activity.Admin.UpdateBrandActivity {
++ ActivityUpdateBrandBinding binding
++ BrandViewModel viewModel
++ void onCreate(Bundle?)
+}
+
+
+class com.example.testbundle.ProductViewModel {
+-  productRepo
+-  favoriteRepo
+-  brandRepo
+-  categoryRepo
+-  authRepo
+-  _stateProduct
++ StateFlow<List<ProductsModel>> stateProduct
+-  _selectedCategory
+-  _selectedBrand
+- void loadProducts()
+- List<Products> applyFilters(List<Products>)
++ void setCategoryFilter(String?)
++ void setBrandFilter(String?)
++ void insertProduct(Products)
++ void updateProduct(Products)
++ void deleteProduct(Int)
++ void toggleFavorite(Int)
+}
+
+
+class com.example.testbundle.Adapter.BasketAdapter$BasketAdapter {
+}
+class com.example.testbundle.Adapter.BasketAdapter {
++ void null()
+}
+
+class com.example.testbundle.Activity.User.FavoriteActivity$Companion {
++  EMAIL_KEY
++  PASSWORD_KEY
+}
+
+class com.example.testbundle.Activity.User.FavoriteActivity {
++ ActivityFavoriteBinding binding
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
++ FavoriteViewModel viewModel
++ void onCreate(Bundle?)
+- void CheckRole(String?,String?)
+- void onUpdateView(List<ProductsModel>)
+}
+
+
+class com.example.shoesonlineshop.activity.BaseActivity {
++ void onCreate(Bundle?)
++ void attachBaseContext(Context)
+}
+
+class com.example.testbundle.Activity.Admin.CreateCategoryActivity {
++ ActivityCreateCategoryBinding binding
++ CategoryViewModel viewModel
++ void onCreate(Bundle?)
+}
+
+
+class com.example.testbundle.Adapter.BrandAdapter$AccountHolder {
+}
+class com.example.testbundle.Adapter.BrandAdapter {
++ void null()
++ AccountHolder onCreateViewHolder(ViewGroup,Int)
++ Int getItemCount()
++ void onBindViewHolder(AccountHolder,Int)
+}
+
+class com.example.testbundle.Activity.Admin.UpdateCategoryActivity {
++ ActivityUpdateCategoryBinding binding
++ CategoryViewModel viewModel
++ void onCreate(Bundle?)
+}
+
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.Order {
+}
+class com.example.testbundle.db.OrderModel {
+}
+class OrderHistoryAdapter$OrderViewHolder {
+- TextView orderId
+- TextView orderDate
+- TextView totalPrice
+- TextView itemsList
++ void bind(OrderModel)
+}
+
+
+class OrderHistoryAdapter {
++ OrderViewHolder onCreateViewHolder(ViewGroup,Int)
++ void onBindViewHolder(OrderViewHolder,Int)
++ Int getItemCount()
+}
+
+class com.example.testbundle.Activity.User.OrderHistoryActivity {
+- ActivityOrderHistoryBinding binding
+- DataStore<androidx.datastore.preferences.core.Preferences> prefs
+- OrderHistoryAdapter orderHistoryAdapter
+- OrderViewModel viewModel
++ void onCreate(Bundle?)
+- void loadData(String?,String?)
+- void setupClickListeners()
+- void onUpdateView(List<OrderModel>)
+}
+
+
+class com.example.testbundle.LocaleUtils {
+-  PREFS_NAME
+-  LANGUAGE_KEY
++ void setLocale(Context,String)
++ String getSavedLanguage(Context)
++ Context updateLocale(Context,String)
+}
+
+
+class com.example.testbundle.Activity.Admin.CreateUserActivity {
++ ActivityCreateUserBinding binding
++ MainViewModel viewModel
++ Boolean validaciaTrue
++ void onCreate(Bundle?)
++ void validaciaIsEmpty(EditText)
+}
+
+
+class com.example.testbundle.Activity.RegisterActivity {
++ MainViewModel viewModel
+- ActivityRegisterBinding binding
++ void onCreate(Bundle?)
++ void validaciaIsEmpty(EditText)
++ Boolean validatePassword(String?)
++ void init(MainDb)
+}
+
+
+class com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter$AccountHolder {
++  binding
++ void bind(ProductsModel)
+}
+
+
+class com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter {
++ AccountHolder onCreateViewHolder(ViewGroup,Int)
++ void onBindViewHolder(AccountHolder,Int)
++ Int getItemCount()
+}
+
+class com.example.testbundle.Adapter.FavoriteAdapter {
+}
+class com.example.testbundle.UriConverter {
++ String? fromUri(Uri?)
++ Uri? toUri(String?)
+}
+
+class com.example.testbundle.BasketViewModel {
+-  repo
+-  productsRepo
+-  dataStoreRepo
+-  Message
++ LiveData<String?> Messages
+- MutableStateFlow<List<BasketModel>> _state
++ StateFlow<List<BasketModel>> stateBasket
+-  _count
++ LiveData<Int> count
++ void setCount(Int)
++ void deleteItem()
++ Boolean isProductInBasket(Int,Int)
++ void deleteItemByProductId(Int)
++ void updateItem(Basket)
++ void increaseQuantity(Int)
++ void decreaseQuantity(Int)
++ Double calculateTotalPrice(List<BasketModel>)
++ void insertItem(Basket,String,String)
+- void loadBasketItems()
+}
+
+
+interface com.example.testbundle.db.Dao {
++ void insertItem(Item)
++ Flow<List<Item>> getAllItems()
++ void deleteItem(Int?)
++ void updateItem(Item)
++ Item getAccountById(Int?)
++ void insertProduct(Products)
++ List<Products> getAllProducts()
++ Flow<List<Products>> getAllProductsWithCategory(Int?)
++ Flow<List<Products>> getAllProductsWithBrand(Int?)
++ void deleteProduct(Int?)
++ void updateProduct(Products)
++ Products? getProductById(Int?)
++ void insertBrand(Brand)
++ Flow<List<Brand>> getAllBrand()
++ Brand? getBrandByName(String)
++ void deleteBrand(Int?)
++ void updateBrand(Brand)
++ Brand? getBrandById(Int?)
++ String? getBrandNameById(Int)
++ void insertCategory(Category)
++ Flow<List<Category>> getAllCategory()
++ void deleteCategory(Int?)
++ void updateCategory(Category)
++ Category getCategoryById(Int?)
++ String? getCategoryNameById(Int)
++ Category? getCategoryByName(String)
++ void insertBasket(Basket)
++ Flow<List<Basket>> getAllBasket()
++ Flow<List<Basket>> getAllBasketByClient(Int)
++ void deleteBasketById(Int?)
++ void deleteBasketById(Int,Int)
++ void deleteBasket()
++ void updateBasket(Basket)
++ Basket getBasketById(Int?)
++ Int? isProductInBasket(Int,Int)
++ Basket? getBasketItemByProduct(Int,Int)
++ void insertFavorite(Favorite)
++ Flow<List<Favorite>> getAllFavorite()
++ Int getIsInFavorite(Int,Int)
++ void deleteFavorite(Int?)
++ void updateFavorite(Favorite)
++ Flow<List<Favorite>> getFavoriteByClient(Int?)
++ void deleteFavoriteByIdClientAndProduct(Int,Int)
++ void insertOrder(Order)
++ Flow<List<Order>> getAllOrder()
++ Flow<List<Order>> getAllOrderByClient(Int)
++ void deleteOrderById(Int?)
++ void deleteOrder()
++ void updateOrder(Order)
++ Order getOrderById(Int?)
++ List<OrderItem> getProductOrderItemById(UUID)
++ void insertOrderItem(OrderItem)
++ Flow<List<OrderItem>> getAllOrderItem()
++ Flow<List<OrderItem>> getAllOrderItemByOrder(UUID)
++ void deleteOrderItemById(Int?)
++ void deleteOrderItem()
++ void updateOrderItem(OrderItem)
++ OrderItem getOrderItemById(Int?)
+}
+
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.CategoryFilter {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.null {
+}
+class com.example.testbundle.db.OrderItem {
+}
+class com.example.testbundle.Activity.Admin.CreateProductActivity$Companion {
+-  index
+}
+
+class com.example.testbundle.Activity.Admin.CreateProductActivity {
++ ActivityCreateProductBinding binding
+- ArrayAdapter<String> adapterBrand
+- ArrayAdapter<String> adapterCategory
++  MY_REQUEST_CODE1
++ ProductViewModel viewModel
+-  imageIdList
++ void onCreate(Bundle?)
+- void onUpdateView(List<ProductsModel>)
+}
+
+
+class com.example.testbundle.FavoriteViewModel {
+-  repos
+-  productsRepo
+-  dataStoreRepo
+- MutableStateFlow<List<ProductsModel>> _state
++ StateFlow<List<ProductsModel>> stateFavorite
++ void deleteItemByProductId(Int)
++ void deleteFavorite(Int)
++ void updateProduct(Favorite)
++ void insertProduct(Favorite)
++ void changeISInFavorite(Int)
+}
+
+
+class com.example.testbundle.Activity.Admin.UpdateProductActivity {
++ ActivityUpdateProductBinding binding
++ ProductViewModel viewModel
+- ArrayAdapter<String> adapterBrand
+- ArrayAdapter<String> adapterCategory
+-  imageIdList
+-  selectedImagePosition
++ void onCreate(Bundle?)
+}
+
+
+class com.example.testbundle.Activity.DataStoreRepo {
+}
+class com.example.testbundle.Activity.null {
++  EMAIL_KEY
++  PASSWORD_KEY
++  USER_ID_KEY
+- DataStoreRepo? instance
++ void createInstance(Context)
++ DataStoreRepo getInstance()
+}
+
+
+class com.example.testbundle.Repository.ItemsRepository {
+}
+class com.example.testbundle.Repository.null {
+- ItemsRepository? instance
++ void createInstance(Context)
++ ItemsRepository getInstance()
+}
+
+
+class com.example.testbundle.Adapter.SizeAdapter {
+}
+class com.example.testbundle.Adapter.Viewholder {
+}
+class com.example.testbundle.db.Item {
+}
+class com.example.testbundle.Activity.User.BasketActivity {
++ ActivityBasketBinding binding
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
+- Int? currentUserId
++ BasketViewModel viewModel
++ OrderViewModel viewModelOrder
++ OrderItemViewModel viewModelOrderItem
++ void onCreate(Bundle?)
+- void CheckRole(String?,String?)
+- void onUpdateView(List<BasketModel>)
++ void showDetailedErrorToast(Boolean,Boolean,Boolean)
++ void showSuccessToast(String)
++ void showErrorToast(String)
+- Boolean isCardNumberValid(String)
+- Boolean isCvcValid(String)
+- Boolean isExpiryDateValid(String)
+}
+
+
+class com.example.testbundle.Repository.FavoriteRepository {
+}
+class com.example.testbundle.Repository.null {
+- FavoriteRepository? instance
++ void createInstance(Context)
++ FavoriteRepository getInstance()
+}
+
+
+class com.example.testbundle.Repository.OrderItemsRepository$Companion {
+- OrderItemsRepository? instance
++ void createInstance(Context)
++ OrderItemsRepository getInstance()
+}
+
+
+class com.example.testbundle.Repository.OrderItemsRepository {
+- Dao dao
++ void deleteItem()
++ void deleteOrderItemById(Int)
++ void getItemsByUser(UUID)
++ void updateItem(OrderItem)
++ void insertItem(OrderItem)
++ List<OrderItem> getProductsByOrderId(UUID)
++ Flow<List<OrderItem>> getItems()
+}
+
+
+class com.example.testbundle.Activity.User.ProfileActivity$Companion {
++  EMAIL_KEY
++  PASSWORD_KEY
++  idAccount
++  language
+}
+
+class com.example.testbundle.Activity.User.ProfileActivity {
+- ActivityProfileBinding binding
++ ProductViewModel viewModel
++ BrandViewModel viewModelBrand
++ CategoryViewModel viewModelCategory
++ DataStore<androidx.datastore.preferences.core.Preferences> prefs
++ void onCreate(Bundle?)
+- void loadDataById(Int)
++ void initBrandandCategory()
+- void changeLanguage()
+}
+
+
+class com.example.testbundle.CategoryViewModel {
+-  repos
+- MutableStateFlow<List<Category>> _stateCategory
++ StateFlow<List<Category>> stateCategory
++ void deleteCategory(Int)
++ void updateCategory(Category)
++ void insertCategory(Category)
+}
+
+
+
+
+com.example.testbundle.Repository.OrderRepository +.. com.example.testbundle.Repository.OrderRepository$Companion
+com.example.testbundle.Adapter.ProductCardAdapter +.. com.example.testbundle.Adapter.ProductCardAdapter$AccountHolder
+com.example.testbundle.Adapter.Adapter <|-- com.example.testbundle.Adapter.ProductCardAdapter
+com.example.testbundle.Activity.MainActivity +.. com.example.testbundle.Activity.MainActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.MainActivity
+com.example.testbundle.Adapter.AccountCardAdapter +.. com.example.testbundle.Adapter.AccountCardAdapter$AccountHolder
+com.example.testbundle.Adapter.Adapter <|-- com.example.testbundle.Adapter.AccountCardAdapter
+android.app.Application <|-- com.example.testbundle.Application
+com.example.testbundle.Repository.CategoryRepository +.. com.example.testbundle.Repository.CategoryRepository$Companion
+com.example.testbundle.Repository.BasketRepository +.. com.example.testbundle.Repository.BasketRepository$Companion
+com.example.testbundle.Activity.User.ListProductActivity +.. com.example.testbundle.Activity.User.ListProductActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.ListProductActivity
+com.example.testbundle.Adapter.CategoryAdapter +.. com.example.testbundle.Adapter.CategoryAdapter$AccountHolder
+com.example.testbundle.Adapter.Adapter <|-- com.example.testbundle.Adapter.CategoryAdapter
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.OrderItemViewModel
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.BrandViewModel
+com.example.testbundle.Adapter.ProductCardUserAdapter +.. com.example.testbundle.Adapter.ProductCardUserAdapter$ProductCardUserAdapter
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.MainViewModel
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.CreateBrandActivity
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.EditAccountCardActivity
+com.example.testbundle.db.MainDb +.. com.example.testbundle.db.MainDb$Companion
+androidx.room.RoomDatabase <|-- com.example.testbundle.db.MainDb
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.ListEmployeeActivity
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.BrandAndCategoryViewActivity
+com.example.testbundle.Repository.BrandRepository +.. com.example.testbundle.Repository.BrandRepository$Companion
+com.example.testbundle.Adapter.ViewHolder <|-- com.example.testbundle.Adapter.ProductHolder
+com.example.testbundle.Activity.User.UpdateInformationActivity +.. com.example.testbundle.Activity.User.UpdateInformationActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.UpdateInformationActivity
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.ListProductAdminActivity
+com.example.testbundle.Activity.User.DetailProductActivity +.. com.example.testbundle.Activity.User.DetailProductActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.DetailProductActivity
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.OrderViewModel
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.UpdateBrandActivity
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.ProductViewModel
+com.example.testbundle.Adapter.BasketAdapter +.. com.example.testbundle.Adapter.BasketAdapter$BasketAdapter
+com.example.testbundle.Activity.User.FavoriteActivity +.. com.example.testbundle.Activity.User.FavoriteActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.FavoriteActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.shoesonlineshop.activity.BaseActivity
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.CreateCategoryActivity
+com.example.testbundle.Adapter.BrandAdapter +.. com.example.testbundle.Adapter.BrandAdapter$AccountHolder
+com.example.testbundle.Adapter.Adapter <|-- com.example.testbundle.Adapter.BrandAdapter
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.UpdateCategoryActivity
+OrderHistoryAdapter +.. OrderHistoryAdapter$OrderViewHolder
+ViewHolder <|-- OrderHistoryAdapter$OrderViewHolder
+Adapter <|-- OrderHistoryAdapter
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.OrderHistoryActivity
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.CreateUserActivity
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.RegisterActivity
+com.example.testbundle.Adapter.FavoriteAdapter +.. com.example.testbundle.Adapter.FavoriteAdapter$AccountHolder
+com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter +.. com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter$AccountHolder
+com.example.testbundle.Adapter.ViewHolder <|-- com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter$AccountHolder
+com.example.testbundle.Adapter.FavoriteAdapter +.. com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter
+com.example.testbundle.Adapter.Adapter <|-- com.example.testbundle.Adapter.FavoriteAdapter$FavoriteAdapter
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.BasketViewModel
+com.example.testbundle.Activity.Admin.CreateProductActivity +.. com.example.testbundle.Activity.Admin.CreateProductActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.CreateProductActivity
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.FavoriteViewModel
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.Admin.UpdateProductActivity
+com.example.testbundle.Adapter <|.. com.example.testbundle.Adapter.SizeAdapter
+com.example.testbundle.Adapter<|.. com.example.testbundle.Adapter.Viewholder
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.BasketActivity
+com.example.testbundle.Repository.OrderItemsRepository +.. com.example.testbundle.Repository.OrderItemsRepository$Companion
+com.example.testbundle.Activity.User.ProfileActivity +.. com.example.testbundle.Activity.User.ProfileActivity$Companion
+com.example.shoesonlineshop.activity.BaseActivity <|-- com.example.testbundle.Activity.User.ProfileActivity
+androidx.lifecycle.ViewModel <|-- com.example.testbundle.CategoryViewModel
+@enduml

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:name=".Application"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.TestBundle"
+        tools:targetApi="31">
+        <activity
+            android:name=".Activity.User.UpdateInformationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.User.OrderHistoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Admin.BrandAndCategoryViewActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".Activity.Admin.UpdateCategoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.Admin.UpdateBrandActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.Admin.CreateCategoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.Admin.CreateBrandActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.User.DetailProductActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Admin.ListProductAdminActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.User.FavoriteActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Admin.CreateUserActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.User.BasketActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.User.ListProductActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.Admin.UpdateProductActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name=".Activity.Admin.EditAccountCardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Admin.ListEmployeeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TestBundle" />
+        <activity
+            android:name=".Activity.User.ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Admin.CreateProductActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".Activity.RegisterActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan"/>
+        <activity
+            android:name=".Activity.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:name=".EmailService" />
+
+    </application>
+
+</manifest>

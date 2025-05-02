@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:background="@drawable/totalprice_bg" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/orderId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Order #123"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/orderDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date: 2023-10-01"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/totalPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total: $100.0"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/itemsList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Items: \nProduct 1 x2 - $20.0\nProduct 2 x1 - $80.0"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp" />
+
+
+
+</LinearLayout>
