@@ -60,6 +60,10 @@ class DetailProductActivity : BaseActivity() {
         loadProductDetails()
         setupObservers()
         setupClickListeners()
+        binding.tvCreateReviews.setOnClickListener {
+            intent.putExtra("product_id",productId)
+            startActivity(Intent(this@DetailProductActivity,CreateReviewActivity::class.java))
+        }
     }
 
     /**
@@ -100,7 +104,6 @@ class DetailProductActivity : BaseActivity() {
                 selectedSize = prefs.data.first()[intPreferencesKey("$SIZE_PREFIX$productId")] ?: -1
             }
             if (selectedSize != -1) {
-
                 sizeAdapter?.setSelectedPosition(selectedSize)
                 checkProductInBasket(selectedSize)
             }
@@ -109,7 +112,7 @@ class DetailProductActivity : BaseActivity() {
             binding.tvDescriptionProduct.text = product.description
             binding.tvCostProduct.text = "$${product.cost}"
             binding.imgShoes.setImageResource(product.imageId)
-
+            binding.tvAmountProduct.text = product.amount.toString()
             db.getDao().getBrandNameById(product.brandId)?.let {
                 binding.tvBrand.text = it
             }
@@ -204,12 +207,17 @@ class DetailProductActivity : BaseActivity() {
         binding.btnArrowBack.setOnClickListener { finish() }
 
         binding.btnShopNow.setOnClickListener {
+            val amountCheck:Int = binding.tvAmountProduct.text.toString().toInt()
             if (selectedSize == -1) {
                 Toast.makeText(
                     this,
                     getString(R.string.please_select_razmer),
                     Toast.LENGTH_SHORT
                 ).show()
+                return@setOnClickListener
+            }
+            if (amountCheck<=0){
+                Toast.makeText(this@DetailProductActivity,"Товара нет в наличии",Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -245,6 +253,7 @@ class DetailProductActivity : BaseActivity() {
             )
 
             viewModelBasket.insertItem(basketItem, getString(R.string.success_add_to_basket),"ERROR")
+
             startActivity(Intent(this@DetailProductActivity, ListProductActivity::class.java))
         }
     }

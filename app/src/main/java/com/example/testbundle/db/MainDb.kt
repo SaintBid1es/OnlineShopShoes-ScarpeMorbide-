@@ -11,8 +11,8 @@ import androidx.room.RoomDatabase
 
 @Database (entities =
 [Item::class, Products::class, Basket::class, Brand::class, Category::class,
-    Favorite::class, CategoryFilter::class, BrandFilter::class, Order::class,OrderItem::class,Reviews::class
-    ], version = 19
+    Favorite::class, CategoryFilter::class, BrandFilter::class, Order::class,OrderItem::class,Reviews::class,ImageEntity::class
+    ], version = 20
 )
 
 

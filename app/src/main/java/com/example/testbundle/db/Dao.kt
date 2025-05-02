@@ -174,4 +174,17 @@ interface Dao {
     suspend fun deleteReviewsByIdClientAndProduct(productID: Int, clientID: Int)
 
 
+
+    @Insert
+    suspend fun insertImage(image: com.example.testbundle.db.ImageEntity): Long
+
+    // Для вставки нескольких изображений
+    @Insert
+    suspend fun insertImages(images: List<ImageEntity>): List<Long>
+
+    // Для получения изображения по ID
+    @Query("SELECT * FROM images WHERE id = :imageId")
+    suspend fun getImageById(imageId: Int): ImageEntity?
+
+
 }

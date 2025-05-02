@@ -36,6 +36,9 @@ data class Products(
     var brandId:Int,
     @ColumnInfo(name = "categoryId")
     var category:Int,
+    @ColumnInfo(name = "amount")
+    var amount:Int,
+    val imageUri: String? = null, // Для URI
 
 )
 data class ProductsModel(
@@ -45,7 +48,7 @@ data class ProductsModel(
     val cost:Double,
     val imageId:Int,
     val isFavorite : Boolean,
-
+    val imageUri: String? = null, // Для URI
 )
 data class BasketModel(
     val id:Int? = null,
@@ -54,6 +57,16 @@ data class BasketModel(
     val cost:Double,
     val imageId:Int,
     val count:Int,
-    val size:Int
+    val size:Int,
+    val amount: Int,
+    var brand:Int,
+    var category:Int,
 
+    )
+@Entity(tableName = "images")
+data class ImageEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(name = "image_data")
+    val imageData: ByteArray
 )

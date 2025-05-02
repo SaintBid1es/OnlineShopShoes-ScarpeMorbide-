@@ -149,7 +149,7 @@ class BasketViewModel(
                     _state.update {
                         list.mapNotNull { record ->
                             var product = productsRepo.getProductById(record.product_id)
-                            BasketModel(product!!.id, product.name, product.description, product.cost, product.imageId, record.count,record.size)
+                            BasketModel(product!!.id, product.name, product.description, product.cost, product.imageId, record.count,record.size,product.amount,product.brandId,product.category)
                         }
                     }
                 }
@@ -158,7 +158,7 @@ class BasketViewModel(
     }
 
     init {
-        loadBasketItems() 
+        loadBasketItems()
     }
 
 
