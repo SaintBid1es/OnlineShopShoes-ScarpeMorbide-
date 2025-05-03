@@ -9,7 +9,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Observer
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,6 +17,7 @@ import com.example.shoesonlineshop.activity.BaseActivity
 import com.example.testbundle.Activity.dataStore
 import com.example.testbundle.Adapter.SizeAdapter
 import com.example.testbundle.BasketViewModel
+import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityDetailProductBinding
 import com.example.testbundle.db.Basket
@@ -33,6 +33,7 @@ class DetailProductActivity : BaseActivity() {
     private var selectedSize: Int = -1
     private var productId: Int = 0
     private val viewModelBasket: BasketViewModel by viewModels()
+    private val viewModelProducts: ProductViewModel by viewModels()
 
     companion object {
         var idUser: Int = 0
@@ -61,8 +62,14 @@ class DetailProductActivity : BaseActivity() {
         setupObservers()
         setupClickListeners()
         binding.tvCreateReviews.setOnClickListener {
-            intent.putExtra("product_id",productId)
-            startActivity(Intent(this@DetailProductActivity,CreateReviewActivity::class.java))
+            val i = Intent(this, CreateReviewActivity::class.java)
+            i.putExtra("product_id",productId)
+            startActivity(i)
+        }
+        binding.tvCountReviews.setOnClickListener {
+            val i = Intent(this, ReviewsActivity::class.java)
+            i.putExtra("product_id",productId)
+            startActivity(i)
         }
     }
 
@@ -113,6 +120,13 @@ class DetailProductActivity : BaseActivity() {
             binding.tvCostProduct.text = "$${product.cost}"
             binding.imgShoes.setImageResource(product.imageId)
             binding.tvAmountProduct.text = product.amount.toString()
+            val rating = viewModelBasket.calculateTotalRating(productId)
+            if (rating.isNaN()){
+                binding.tvRating.text = "0.0"
+            }else{
+                binding.tvRating.text = "${String.format("%.2f", rating)}"
+            }
+            binding.tvCountReviews.text = viewModelBasket.countProductById(productId).toString()
             db.getDao().getBrandNameById(product.brandId)?.let {
                 binding.tvBrand.text = it
             }

@@ -28,12 +28,19 @@
                 android:layout_width="118dp"
                 android:layout_height="100dp"
                 app:srcCompat="@drawable/avatarmen" />
-
+            <TextView
+                android:id="@+id/tvClientName"
+                android:layout_width="match_parent"
+                android:gravity="right"
+                android:textStyle="bold"
+                android:layout_height="match_parent"
+                android:text="TextView" />
             <TextView
                 android:id="@+id/tvTextReview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:text="TextView" />
+
 
             <Button
                 android:id="@+id/btnDeleteCard"

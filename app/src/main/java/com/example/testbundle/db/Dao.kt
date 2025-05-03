@@ -157,22 +157,33 @@ interface Dao {
 
     @Insert
     suspend fun insertReviews(item: Reviews)
+
     @Query("SELECT * FROM reviews")
-    fun getAllReviews(): Flow<List<Reviews>>
+     fun getAllReviews(): Flow<List<Reviews>>
+
     @Query("Select COUNT(id) from reviews where client_id = :clientID and product_id = :productId")
-    suspend fun getIsReviews(clientID: Int, productId : Int) : Int
+    suspend fun getIsReviews(clientID: Int, productId: Int): Int
 
     @Query("DELETE FROM reviews WHERE id = :id_rewiews")
     suspend fun deleteReviews(id_rewiews: Int?)
+
+    @Query("SELECT * FROM reviews WHERE id = :id_reviews")
+    suspend fun getReviewsById(id_reviews: Int?):Reviews
+
     @Update
     suspend fun updateRewiews(item: Reviews)
 
     @Query("SELECT * FROM reviews WHERE product_id = :id_product")
-    fun getReviewsByProduct(id_product: Int?):Flow<List<Reviews>>
+    fun getReviewsByProduct(id_product: Int?): Flow<List<Reviews>>
 
     @Query("DELETE FROM reviews WHERE product_id = :productID and client_id = :clientID")
     suspend fun deleteReviewsByIdClientAndProduct(productID: Int, clientID: Int)
 
+    @Query("SELECT  SUM(rating) from reviews where product_id = :productID ")
+    suspend fun selectRating(productID: Int) : Double
+
+    @Query("SELECT Count(*) from reviews where product_id = :productID ")
+    suspend fun countRating(productID: Int) : Int
 
 
     @Insert

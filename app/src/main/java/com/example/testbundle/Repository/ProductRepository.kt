@@ -28,6 +28,12 @@ class ProductRepository private constructor(
     suspend fun filterBrand(id:Int){
         dao.getAllProductsWithBrand(id)
     }
+   suspend fun countRating(id:Int):Int{
+        return  dao.countRating(id)
+    }
+  suspend fun selectRating(id:Int):Double{
+        return dao.selectRating(id)
+    }
 
     suspend fun getProducts() : List<Products> = dao.getAllProducts()
     suspend fun getProductById(productID : Int) : Products? = dao.getProductById(productID)

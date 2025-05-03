@@ -38,7 +38,7 @@ data class Products(
     var category:Int,
     @ColumnInfo(name = "amount")
     var amount:Int,
-    val imageUri: String? = null, // Для URI
+    val imageUri: String?, // Для URI
 
 )
 data class ProductsModel(

@@ -10,6 +10,7 @@ import com.example.testbundle.Repository.ItemsRepository
 import com.example.testbundle.Repository.OrderItemsRepository
 import com.example.testbundle.Repository.OrderRepository
 import com.example.testbundle.Repository.ProductRepository
+import com.example.testbundle.Repository.ReviewsRepository
 
 class Application : Application() {
 
@@ -25,5 +26,6 @@ class Application : Application() {
         BrandRepository.createInstance(applicationContext)
         CategoryRepository.createInstance(applicationContext)
         DataStoreRepo.createInstance(applicationContext)
+        ReviewsRepository.createInstance(applicationContext)
     }
 }

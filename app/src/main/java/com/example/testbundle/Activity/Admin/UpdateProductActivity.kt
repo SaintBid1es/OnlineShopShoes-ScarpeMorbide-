@@ -234,7 +234,8 @@ class UpdateProductActivity : BaseActivity() {
             imageId = imageId,
             brandId = brand,
             category = category,
-            amount = binding.etAmount.text.toString().toInt()
+            amount = binding.etAmount.text.toString().toInt(),
+            null
         )
     }
 

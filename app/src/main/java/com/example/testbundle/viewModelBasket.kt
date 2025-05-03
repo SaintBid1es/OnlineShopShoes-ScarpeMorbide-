@@ -16,6 +16,7 @@ import com.example.testbundle.db.BasketModel
 import com.example.testbundle.db.Dao
 import com.example.testbundle.db.Products
 import com.example.testbundle.db.ProductsModel
+import com.example.testbundle.db.Reviews
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,6 +69,16 @@ class BasketViewModel(
         }
     }
 
+    suspend fun calculateTotalRating(id_product:Int):Double {
+
+        val selectRating =productsRepo.selectRating(id_product)
+        val countrating = productsRepo.countRating(id_product)
+        return selectRating/countrating
+    }
+    suspend fun countProductById(id_product:Int):Int{
+        val countrating = productsRepo.countRating(id_product)
+        return countrating
+    }
 
     fun updateItem(item: Basket) {
         viewModelScope.launch {

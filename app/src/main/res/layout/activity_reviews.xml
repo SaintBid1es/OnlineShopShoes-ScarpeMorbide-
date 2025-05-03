@@ -8,21 +8,11 @@
     tools:context=".Activity.User.ReviewsActivity">
 
 
-    <ImageView
-        android:id="@+id/btnArrowBack"
-        android:layout_width="53dp"
-        android:layout_height="44dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/arrow_ic"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
     <TextView
+        android:id="@+id/textView23"
         android:layout_width="163dp"
         android:layout_height="52dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="48dp"
         android:text="Отзывы"
         android:textSize="40sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -30,14 +20,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/btnArrowBack"
+        android:layout_width="53dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="56dp"
+        android:src="@drawable/arrow_ic"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcViewReview"
-        android:layout_width="378dp"
-        android:layout_height="779dp"
+        android:layout_width="349dp"
+        android:layout_height="718dp"
+        android:layout_marginTop="53dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.616" />
+        app:layout_constraintTop_toBottomOf="@+id/textView23"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -40,20 +40,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/etRating"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+<!--    <EditText-->
+<!--        android:id="@+id/etRating"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginStart="24dp"-->
+<!--        android:layout_marginTop="336dp"-->
+<!--        android:digits="1234567890."-->
+<!--        android:ems="10"-->
+<!--        android:hint="write to Rating"-->
+<!--        android:inputType="text"-->
+<!--        android:isScrollContainer="false"-->
+<!--        android:maxLines="1"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="1.0"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+
+    <Spinner
+        android:id="@+id/spinnerRating"
+        android:layout_width="378dp"
+        android:layout_height="32dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="336dp"
-        android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZабвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ "
-        android:ems="10"
-        android:hint="write to Rating"
-        android:inputType="text"
-        android:isScrollContainer="false"
-        android:maxLines="1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        android:entries="@array/rating"
+        android:layout_marginTop="340dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
