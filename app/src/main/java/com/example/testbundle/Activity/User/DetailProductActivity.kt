@@ -2,6 +2,7 @@ package com.example.testbundle.Activity.User
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -13,6 +14,8 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.shoesonlineshop.activity.BaseActivity
 import com.example.testbundle.Activity.dataStore
 import com.example.testbundle.Adapter.SizeAdapter
@@ -118,7 +121,35 @@ class DetailProductActivity : BaseActivity() {
             binding.tvNameProduct.text = product.name
             binding.tvDescriptionProduct.text = product.description
             binding.tvCostProduct.text = "$${product.cost}"
-            binding.imgShoes.setImageResource(product.imageId)
+            if (!product.imageUri.isNullOrEmpty()) {
+                try {
+                    // Check if the URI is already complete or just a filename
+                    val imageUri = if (product.imageUri.startsWith("content://")) {
+                        Uri.parse(product.imageUri)
+                    } else {
+                        // Construct proper URI for the image file
+                        Uri.parse("content://com.example.testbundle.fileprovider/product_images/${product.imageUri}")
+                    }
+
+                    runOnUiThread {
+                        Glide.with(this@DetailProductActivity)
+                            .load(imageUri)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .error(R.drawable.avatarmen)
+                            .into(binding.imgShoes)
+                    }
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        binding.imgShoes.setImageResource(R.drawable.avatarmen)
+                    }
+                }
+            } else {
+                runOnUiThread {
+                    binding.imgShoes.setImageResource(product.imageId ?: R.drawable.avatarmen)
+                }
+            }
+
+//            binding.imgShoes.setImageResource(product.imageId)
             binding.tvAmountProduct.text = product.amount.toString()
             val rating = viewModelBasket.calculateTotalRating(productId)
             if (rating.isNaN()){

@@ -1,12 +1,16 @@
 package com.example.testbundle.Adapter
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.testbundle.Activity.User.DetailProductActivity
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityBasketBinding
@@ -29,6 +33,7 @@ class BasketAdapter {
         private val MinusCount:(count:Int)->Unit
 
     ): RecyclerView.Adapter<BasketAdapter.AccountHolder>() {
+        private lateinit var context: Context
         inner class AccountHolder(
             item: View
         ) : RecyclerView.ViewHolder(item) {
@@ -39,7 +44,22 @@ class BasketAdapter {
                 var counts: Int = item.count
                 val baseCost = item.cost
 
-                pic.setImageResource(item.imageId)
+                if (!item.imageUri.isNullOrEmpty()) {
+                    try {
+                        // Create proper URI for the image file
+                        val imageUri = Uri.parse("content://com.example.testbundle.fileprovider/product_images/${item.imageUri}")
+                        Glide.with(context)
+                            .load(imageUri)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .error(R.drawable.avatarmen)
+                            .into(pic)
+                    } catch (e: Exception) {
+                        pic.setImageResource(R.drawable.avatarmen)
+                    }
+                } else {
+                    pic.setImageResource(item.imageId ?: R.drawable.avatarmen)
+                }
+
                 titleTxt.text = item.name
 
                 priceTxt.text = "${itemView.context.getString(R.string.valuta)} %.2f".format(baseCost * counts)
@@ -68,7 +88,10 @@ class BasketAdapter {
 
 
         }
-
+        override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+            super.onAttachedToRecyclerView(recyclerView)
+            this.context = recyclerView.context
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AccountHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.basket_item, parent, false)

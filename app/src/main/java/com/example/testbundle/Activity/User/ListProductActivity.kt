@@ -75,8 +75,6 @@ class ListProductActivity : BaseActivity() {
 
     private fun setupAdapters() {
         val db = MainDb.getDb(this)
-
-
         adapterBrand = ArrayAdapter(this, android.R.layout.simple_spinner_item)
         adapterBrand.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         adapterCategory = ArrayAdapter(this, android.R.layout.simple_spinner_item)

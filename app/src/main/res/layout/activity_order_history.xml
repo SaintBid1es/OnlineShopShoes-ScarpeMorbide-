@@ -35,16 +35,11 @@
             android:id="@+id/tvNameAccount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Order History"
+            android:text="@string/order_history"
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="История заказов"
-            android:textColor="@color/grey" />
+
 
     </LinearLayout>
 

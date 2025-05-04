@@ -26,16 +26,11 @@
                 android:id="@+id/tvNameAccount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Category And Brand Managment"
+                android:text="@string/category_and_brand_managment"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Управление категориями и брендами"
-                android:textColor="@color/grey" />
+
 
         </LinearLayout>
 

@@ -70,9 +70,12 @@ class BasketViewModel(
     }
 
     suspend fun calculateTotalRating(id_product:Int):Double {
-
-        val selectRating =productsRepo.selectRating(id_product)
+        var selectRating:Double=0.0
         val countrating = productsRepo.countRating(id_product)
+        if (countrating!=0){
+             selectRating =productsRepo.selectRating(id_product)
+        }
+
         return selectRating/countrating
     }
     suspend fun countProductById(id_product:Int):Int{
@@ -160,7 +163,7 @@ class BasketViewModel(
                     _state.update {
                         list.mapNotNull { record ->
                             var product = productsRepo.getProductById(record.product_id)
-                            BasketModel(product!!.id, product.name, product.description, product.cost, product.imageId, record.count,record.size,product.amount,product.brandId,product.category)
+                            BasketModel(product!!.id, product.name, product.description, product.cost, product.imageId,product.imageUri, record.count,record.size,product.amount,product.brandId,product.category)
                         }
                     }
                 }

@@ -48,7 +48,7 @@ data class ProductsModel(
     val cost:Double,
     val imageId:Int,
     val isFavorite : Boolean,
-    val imageUri: String? = null, // Для URI
+    val imageUri: String? , // Для URI
 )
 data class BasketModel(
     val id:Int? = null,
@@ -56,6 +56,7 @@ data class BasketModel(
     val description: String,
     val cost:Double,
     val imageId:Int,
+    val imageUri: String?,
     val count:Int,
     val size:Int,
     val amount: Int,

@@ -65,6 +65,7 @@ class FavoriteViewModel(
                                     product.cost,
                                     product.imageId,
                                     isInFavorite > 0,
+                                    product.imageUri
 
                                 )
                             }

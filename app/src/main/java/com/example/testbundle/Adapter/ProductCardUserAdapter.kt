@@ -1,11 +1,15 @@
 package com.example.testbundle.Adapter
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ProductUserItemBinding
 import com.example.testbundle.db.ProductsModel
@@ -16,13 +20,32 @@ class ProductCardUserAdapter(
     private val onFavoriteClick: (Int) -> Unit
 ) : RecyclerView.Adapter<ProductCardUserAdapter.ProductViewHolder>() {
 
+    private lateinit var context: Context
+
     inner class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val binding = ProductUserItemBinding.bind(itemView)
 
         @SuppressLint("SetTextI18n")
         fun bind(item: ProductsModel) {
             with(binding) {
-                pic.setImageResource(item.imageId)
+                // Load image
+                if (!item.imageUri.isNullOrEmpty()) {
+                    try {
+                        // Create proper URI for the image file
+                        val imageUri = Uri.parse("content://com.example.testbundle.fileprovider/product_images/${item.imageUri}")
+
+                        Glide.with(context)
+                            .load(imageUri)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .error(R.drawable.avatarmen)
+                            .into(pic)
+                    } catch (e: Exception) {
+                        pic.setImageResource(R.drawable.avatarmen)
+                    }
+                } else {
+                    pic.setImageResource(item.imageId ?: R.drawable.avatarmen)
+                }
+
                 priceTxt.text = "${itemView.context.getString(R.string.valuta)} ${item.cost}"
                 titleTxt.text = item.name
 
@@ -39,6 +62,11 @@ class ProductCardUserAdapter(
                 }
             }
         }
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this.context = recyclerView.context
     }
 
     fun updateList(newList: List<ProductsModel>) {

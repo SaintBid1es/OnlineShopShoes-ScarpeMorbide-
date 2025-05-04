@@ -15,6 +15,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.Activity.User.ForgenPasswordActivity
 import com.example.testbundle.Activity.User.ProfileActivity
 import com.example.testbundle.LocaleUtils
 import com.example.testbundle.R
@@ -38,7 +39,7 @@ class MainActivity : BaseActivity() {
     private var _binding: ActivityMainBinding? = null
     private val binding
         get() = _binding ?: throw IllegalStateException("Binding null")
-    private var randomValues:String?=null
+
 
     lateinit var prefs : DataStore<Preferences>
     companion object {
@@ -109,7 +110,7 @@ class MainActivity : BaseActivity() {
 //            changeLanguage()
 //        }
         binding.forgotPasswordLink.setOnClickListener {
-                showConfirmEmailDialog()
+               startActivity(Intent(this@MainActivity,ForgenPasswordActivity::class.java))
         }
     }
 
@@ -138,123 +139,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    fun sendEmail(toEmail: String) {
-        try {
-            val props = Properties()
-            props.setProperty("mail.transport.protocol", "smtp")
-            props.setProperty("mail.host", "smtp.gmail.com")
-            props.put("mail.smtp.auth", "true")
-            props.put("mail.smtp.port", "465")
-            props.put("mail.smtp.socketFactory.port", "465")
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
 
-            randomValues = Random.nextInt(1000, 9999).toString()
-            val session = Session.getDefaultInstance(props, object : Authenticator() {
-                override fun getPasswordAuthentication(): PasswordAuthentication {
-                    //от кого
-                    return PasswordAuthentication("isip_m.a.vesenkov@mpt.ru", "mbmtqsqhtxxwurzn")
-                }
-            })
-            val message = MimeMessage(session)//от кого
-            message.setFrom(InternetAddress("isip_m.a.vesenkov@mpt.ru"))//куда
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
-            message.subject = "This is code"
-            message.setText(randomValues)
-
-            val transport = session.getTransport("smtp")
-            transport.connect()
-            Transport.send(message)
-            transport.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        //то что я хочу
-    }
-  fun sendEmailNewPassword(toEmail: String,password:String) {
-        try {
-            val props = Properties()
-            props.setProperty("mail.transport.protocol", "smtp")
-            props.setProperty("mail.host", "smtp.gmail.com")
-            props.put("mail.smtp.auth", "true")
-            props.put("mail.smtp.port", "465")
-            props.put("mail.smtp.socketFactory.port", "465")
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
-            val session = Session.getDefaultInstance(props, object : Authenticator() {
-                override fun getPasswordAuthentication(): PasswordAuthentication {
-                    //от кого
-                    return PasswordAuthentication("isip_m.a.vesenkov@mpt.ru", "mbmtqsqhtxxwurzn")
-                }
-            })
-            val message = MimeMessage(session)//от кого
-            message.setFrom(InternetAddress("isip_m.a.vesenkov@mpt.ru"))//куда
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
-            message.subject = "This is New Password"
-            message.setText(password)
-
-            val transport = session.getTransport("smtp")
-            transport.connect()
-            Transport.send(message)
-            transport.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        //то что я хочу
-    }
-    @SuppressLint("ResourceAsColor")
-    private fun showConfirmEmailDialog() {
-        val dialog = AlertDialog.Builder(this@MainActivity)
-        val dialogView = layoutInflater.inflate(R.layout.resetpassword_item, null)
-        val etCode = dialogView.findViewById<EditText>(R.id.etCode)
-        val etEmail = dialogView.findViewById<EditText>(R.id.etEmail)
-        val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
-        val btnSendMessage = dialogView.findViewById<Button>(R.id.btnSendMessage)
-        val btnLeave = dialogView.findViewById<ImageButton>(R.id.btnLeave)
-        dialog.setView(dialogView)
-        dialog.setCancelable(false)
-        val customdialog = dialog.create()
-        customdialog.show()
-        btnSendMessage.setOnClickListener {
-            Thread(Runnable{
-                val email = etEmail.text.toString()
-                sendEmail(email)
-            }).start()
-        }
-        btnConfirm.setOnClickListener {
-            val code = etCode.text?.toString() ?: ""
-            if (code==randomValues){
-                val newPassword = newPasswordEmail(11)
-                Thread(Runnable {
-                    sendEmailNewPassword(etEmail.text.toString(), newPassword)
-                }).start()
-                updatePasswordForEmail(etEmail.text.toString(),newPassword)
-                customdialog.dismiss()
-                Toast.makeText(this@MainActivity,getString(R.string.succesCheckEmail), Toast.LENGTH_SHORT).show()
-            }else{
-                Toast.makeText(this@MainActivity,getString(R.string.unsuccessfullyCheckEmail),
-                    Toast.LENGTH_SHORT).show()
-            }
-
-        }
-        btnLeave.setOnClickListener {
-            customdialog.dismiss()
-        }
-
-    }
-    private fun updatePasswordForEmail(email: String,password:String) {
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItems().asLiveData().observe(this) { list ->
-            val user = list.find { it.email == email  }
-            user!!.password = password
-        }
-    }
-    fun newPasswordEmail(len:Int) :String{
-         val DATA: String = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz|!£$%&/=@#"
-            val sb = StringBuilder(len)
-            for (i in 0..<len) {
-                sb.append(DATA[Random.nextInt(DATA.length)])
-            }
-        return sb.toString()
-    }
 
 
 

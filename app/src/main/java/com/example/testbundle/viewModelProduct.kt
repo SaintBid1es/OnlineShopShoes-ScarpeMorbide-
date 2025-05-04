@@ -53,6 +53,7 @@ class ProductViewModel : ViewModel() {
                             cost = product.cost,
                             imageId = product.imageId,
                             isFavorite = isInFavorite,
+                            product.imageUri
                         )
                     }
                 }

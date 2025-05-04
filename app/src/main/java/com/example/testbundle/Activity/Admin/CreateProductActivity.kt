@@ -190,32 +190,44 @@ class CreateProductActivity : BaseActivity() {
             }
         }
     }
-    private suspend fun saveImageToInternalStorage(uri: Uri): File = withContext(Dispatchers.IO) {
+
+private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? = null): File =
+    withContext(Dispatchers.IO) {
         val imagesDir = File(filesDir, "product_images").apply {
             if (!exists()) mkdirs()
         }
 
-        val outputFile = File(imagesDir, "img_${System.currentTimeMillis()}.jpg")
+        // Генерируем имя файла с учетом оригинального имени (если есть)
+        val fileName = originalName?.takeIf { it.isNotBlank() }?.let {
+            if (it.contains('.')) it else "$it.jpg"
+        } ?: "img_${System.currentTimeMillis()}.jpg"
 
-        contentResolver.openInputStream(uri)?.use { input ->
-            FileOutputStream(outputFile).use { output ->
-                input.copyTo(output)
+        val outputFile = File(imagesDir, fileName)
+
+        try {
+            // Читаем и сохраняем изображение
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(outputFile).use { output ->
+                    input.copyTo(output)
+                    output.flush()
+                }
+            } ?: throw IOException("Не удалось открыть исходное изображение")
+
+            // Проверяем результат сохранения
+            when {
+                !outputFile.exists() -> throw IOException("Файл не был создан")
+                outputFile.length() == 0L -> {
+                    outputFile.delete()
+                    throw IOException("Файл сохранен как пустой")
+                }
+                else -> return@withContext outputFile
             }
-        } ?: throw IOException("Cannot open input stream")
-
-        return@withContext outputFile
+        } catch (e: Exception) {
+            // Удаляем частично сохраненный файл в случае ошибки
+            if (outputFile.exists()) outputFile.delete()
+            throw e
+        }
     }
-
-
-
-
-
-
-
-
-
-
-
 
 
     private fun setupImageRecycler() {
@@ -277,9 +289,7 @@ class CreateProductActivity : BaseActivity() {
                 imageUri = null
             )
             is ProductImage.UriImage -> {
-                val fileUri = "file://${selectedImage.uri.path}".also {
-                    Log.d("URI_DEBUG", "Saving URI: $it")
-                }
+                val fileName = File(selectedImage.uri.path ?: "").name
                 Products(
                     name = name,
                     cost = cost,
@@ -289,7 +299,7 @@ class CreateProductActivity : BaseActivity() {
                     brandId = brandId,
                     category = categoryId,
                     amount = amount,
-                    imageUri = fileUri
+                    imageUri = fileName // Сохраняем только имя файла
                 )
             }
         }

@@ -28,18 +28,13 @@ class ProductCreateAdapter(
 
         fun bind(image: ProductImage, isChecked: Boolean) {
             binding.checkbox.setOnCheckedChangeListener(null)
-
-            // Загрузка изображения с обработкой ошибок
             loadImage(image)
-
             binding.checkbox.isChecked = isChecked
-
             binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     updateSelection(adapterPosition)
                 }
             }
-
             itemView.setOnClickListener {
                 updateSelection(adapterPosition)
             }
@@ -69,7 +64,6 @@ class ProductCreateAdapter(
                 lastSelectedPosition = selectedPosition
                 selectedPosition = position
                 onProductSelected(position)
-
                 // Заменяем notifySelectionChanged() на прямой вызов:
                 recyclerView?.post {
                     if (lastSelectedPosition != RecyclerView.NO_POSITION) {

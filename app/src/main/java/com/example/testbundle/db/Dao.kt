@@ -23,6 +23,8 @@ interface Dao {
     suspend fun updateItem(item: Item)
     @Query("SELECT * FROM items WHERE id = :id_items")
     suspend fun getAccountById(id_items: Int?):Item
+    @Query("SELECT * FROM items WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): Item?
 
     @Insert
     suspend fun insertProduct(item: Products)
@@ -196,6 +198,9 @@ interface Dao {
     // Для получения изображения по ID
     @Query("SELECT * FROM images WHERE id = :imageId")
     suspend fun getImageById(imageId: Int): ImageEntity?
+
+    @Query("UPDATE products SET imageId = :imageId, imageUri = :imageUri WHERE id = :productId")
+    suspend fun updateProductImage(productId: Int, imageId: Int, imageUri: String?)
 
 
 }

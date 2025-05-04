@@ -1,5 +1,6 @@
 package com.example.testbundle.Activity.Admin
 
+import ProductCardAdapter
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -14,7 +15,6 @@ import com.example.testbundle.Activity.User.FavoriteActivity
 import com.example.testbundle.Activity.User.ListProductActivity
 import com.example.testbundle.Activity.User.OrderHistoryActivity
 import com.example.testbundle.Activity.User.ProfileActivity
-import com.example.testbundle.Adapter.ProductCardAdapter
 import com.example.testbundle.Adapter.ProductCardUserAdapter
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.databinding.ActivityListProductAdminBinding

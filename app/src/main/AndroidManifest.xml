@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".Application"
@@ -24,6 +20,10 @@
         android:theme="@style/Theme.TestBundle"
         tools:targetApi="31">
         <activity
+            android:name=".Activity.User.ForgenPasswordActivity"
+            android:windowSoftInputMode="adjustPan"
+            android:exported="false" />
+        <activity
             android:name=".Activity.User.UpdateInformationActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
@@ -33,7 +33,6 @@
         <activity
             android:name=".Activity.Admin.BrandAndCategoryViewActivity"
             android:exported="false" />
-
         <activity
             android:name=".Activity.Admin.UpdateCategoryActivity"
             android:exported="false"
@@ -73,7 +72,6 @@
             android:name=".Activity.Admin.UpdateProductActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-
         <activity
             android:name=".Activity.Admin.EditAccountCardActivity"
             android:exported="false" />
@@ -103,7 +101,7 @@
         <activity
             android:name=".Activity.RegisterActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"/>
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".Activity.MainActivity"
             android:exported="true">
@@ -113,8 +111,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".EmailService" />
 
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <service android:name=".EmailService" />
     </application>
 
 </manifest>
