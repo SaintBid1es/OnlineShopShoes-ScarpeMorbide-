@@ -108,7 +108,8 @@ class CreateUserActivity : BaseActivity() {
                         surname,
                         email,
                         telephone,
-                        binding.SpinnerSpecialitety.selectedItem.toString()
+                        binding.SpinnerSpecialitety.selectedItem.toString(),
+                        null
                     )
                     viewModel.insertItem(item)
                     Toast.makeText(

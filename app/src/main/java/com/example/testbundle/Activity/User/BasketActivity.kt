@@ -1,9 +1,16 @@
 package com.example.testbundle.Activity.User
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.text.Editable
 import android.text.InputFilter
 import android.text.InputType
@@ -14,6 +21,9 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
@@ -46,16 +56,29 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.Properties
+import javax.mail.Authenticator
+import javax.mail.Message
+import javax.mail.PasswordAuthentication
+import javax.mail.Session
+import javax.mail.Transport
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
+import kotlin.random.Random
 
 class BasketActivity : BaseActivity() {
     lateinit var binding: ActivityBasketBinding
     lateinit var prefs: DataStore<androidx.datastore.preferences.core.Preferences>
     private var currentUserId: Int? = -1
-
+    private var EMAIL:String?=null
     val viewModel: BasketViewModel by viewModels()
+    val viewModelProducts: ProductViewModel by viewModels()
     private val viewModelOrder: OrderViewModel by viewModels()
     private val viewModelOrderItem: OrderItemViewModel by viewModels()
+    private var recyclerViewState: Parcelable? = null
 
+    private val REQUEST_CODE_POST_NOTIFICATIONS = 1
+    val CHANNEL_ID = "confirmOrder"
 
 
     @SuppressLint("SuspiciousIndentation")
@@ -65,7 +88,22 @@ class BasketActivity : BaseActivity() {
         setContentView(binding.root)
         prefs = applicationContext.dataStore
         binding.rcViewBasket.layoutManager = LinearLayoutManager(this)
+        restoreRecyclerState(savedInstanceState)
 
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    REQUEST_CODE_POST_NOTIFICATIONS
+                )
+            }
+        }
         /**
          * Навигационное меню
          */
@@ -129,10 +167,11 @@ class BasketActivity : BaseActivity() {
         db.getDao().getAllItems().asLiveData().observe(this) { list ->
             val user = list.find { it.email == email && it.password == password }
             user?.let {
-                if (it.speciality == "Администратор" || it.speciality == "Administrator" )  {
+                if (it.speciality == "Администратор" || it.speciality == "Administrator") {
                     binding.layoutUsers.isVisible = true
                     binding.layoutProduct.isVisible = true
                 }
+                EMAIL = it.email
             }
         }
     }
@@ -142,7 +181,8 @@ class BasketActivity : BaseActivity() {
      */
     private fun onUpdateView(entities: List<BasketModel>) {
         val totalPrice = viewModel.calculateTotalPrice(entities)
-        binding.tvTotalPrice.text = "${getString(R.string.total_price)}${String.format("%.2f", totalPrice)}"
+        binding.tvTotalPrice.text =
+            "${getString(R.string.total_price)}${String.format("%.2f", totalPrice)}"
         binding.apply {
             val adapter = BasketAdapter.BasketAdapter(entities, onDelete = { item ->
                 item?.let { item.id?.let { it1 -> viewModel.deleteItemByProductId(it1, it.size) } }
@@ -153,9 +193,9 @@ class BasketActivity : BaseActivity() {
                         putExtra("size_id", it.size)
                     }
                 startActivity(intent)
-            }, PlusCount = {id->
+            }, PlusCount = { id ->
                 viewModel.increaseQuantity(id)
-            }, MinusCount = { id->
+            }, MinusCount = { id ->
                 viewModel.decreaseQuantity(id)
             })
             rcViewBasket.adapter = adapter
@@ -165,8 +205,6 @@ class BasketActivity : BaseActivity() {
              * Кнопка оформления заказа
              */
             binding.btnPlaceOrder.setOnClickListener {
-                val isNumber = "[0123456789]".toRegex()
-                val isText = Regex("[а-яА-ЯёЁa-zA-Z]")
                 if (entities.isEmpty()) {
                     Toast.makeText(
                         this@BasketActivity,
@@ -202,14 +240,24 @@ class BasketActivity : BaseActivity() {
                         private var deletingSlash = false
                         private var deletedChar = ' '
 
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                        override fun beforeTextChanged(
+                            s: CharSequence?,
+                            start: Int,
+                            count: Int,
+                            after: Int
+                        ) {
                             if (count > 0 && !isFormatting) {
                                 deletingSlash = start == 2
                                 deletedChar = s?.getOrNull(start) ?: ' '
                             }
                         }
 
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        override fun onTextChanged(
+                            s: CharSequence?,
+                            start: Int,
+                            before: Int,
+                            count: Int
+                        ) {
                             if (isFormatting) return
 
                             val text = s?.toString() ?: ""
@@ -220,9 +268,7 @@ class BasketActivity : BaseActivity() {
                                 etmonthAndYear.setText("$text/")
                                 etmonthAndYear.setSelection(3)
                                 isFormatting = false
-                            }
-
-                            else if (deletingSlash && deletedChar == '/') {
+                            } else if (deletingSlash && deletedChar == '/') {
                                 isFormatting = true
                                 etmonthAndYear.setText(text.substring(0, 1))
                                 etmonthAndYear.setSelection(1)
@@ -240,29 +286,29 @@ class BasketActivity : BaseActivity() {
                         val cardNumber = etNumberCard.text.toString().replace(" ", "")
                         val cvcCode = cvc.text.toString()
                         val expiryDate = etmonthAndYear.text.toString()
-
-
                         val cardValid = isCardNumberValid(cardNumber)
                         val cvcValid = isCvcValid(cvcCode)
                         val expiryValid = isExpiryDateValid(expiryDate)
-
-
-                        etNumberCard.background = ContextCompat.getDrawable(this@BasketActivity,
-                            if (cardValid) R.drawable.correct_background else R.drawable.error_background)
-
-                        cvc.background = ContextCompat.getDrawable(this@BasketActivity,
-                            if (cvcValid) R.drawable.correct_background else R.drawable.error_background)
-
-                        etmonthAndYear.background = ContextCompat.getDrawable(this@BasketActivity,
-                            if (expiryValid) R.drawable.correct_background else R.drawable.error_background)
+                        etNumberCard.background = ContextCompat.getDrawable(
+                            this@BasketActivity,
+                            if (cardValid) R.drawable.correct_background else R.drawable.error_background
+                        )
+                        cvc.background = ContextCompat.getDrawable(
+                            this@BasketActivity,
+                            if (cvcValid) R.drawable.correct_background else R.drawable.error_background
+                        )
+                        etmonthAndYear.background = ContextCompat.getDrawable(
+                            this@BasketActivity,
+                            if (expiryValid) R.drawable.correct_background else R.drawable.error_background
+                        )
 
                         if (!cardValid || !cvcValid || !expiryValid) {
                             showDetailedErrorToast(cardValid, cvcValid, expiryValid)
                             return@setOnClickListener
                         }
 
-
-                        val orderDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        val orderDate =
+                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                         val totalPrice = entities.sumOf { it.cost * it.count }
                         val order = Order(
                             client_id = userId,
@@ -285,8 +331,34 @@ class BasketActivity : BaseActivity() {
                                     price = record.cost,
                                     size = record.size + 6
                                 )
+
                                 viewModelOrderItem.insertOrderItem(orderItem)
                             }
+                            entities.forEach { product->
+                                val products = Products(
+                                    product.id,
+                                    product.name,
+                                    product.cost,
+                                    product.description,
+                                    product.size,
+                                    product.imageId,
+                                    product.brand,
+                                    product.category,
+                                    product.amount-1,
+                                    product.imageUri
+                                )
+                                viewModelProducts.updateProduct(products)
+                            }
+                            val productsText = entities.joinToString("\n") { item ->
+                                "Товар: ${item.name}, Размер: ${item.size + 6}, Кол-во: ${item.count}, Цена: ${item.cost}"
+                            }
+                            val emailText = "Токен заказа: $orderId\nДата заказа:  $orderDate\nСостав заказа: $productsText\nИтоговая стоимость: $totalPrice".trimIndent()
+
+                            Thread(Runnable {
+                                sendEmail(EMAIL, "$emailText")
+                            }).start()
+
+                            sendNotification(getString(R.string.order),getString(R.string.the_order_was_successfully_completed))
 
                             viewModel.deleteItem()
                             adapter.notifyDataSetChanged()
@@ -353,6 +425,7 @@ class BasketActivity : BaseActivity() {
         toast.view?.setBackgroundColor(ContextCompat.getColor(this@BasketActivity, R.color.red))
         toast.show()
     }
+
     /**
      * Валидация на номер карты
      * @param cardNumber[String]
@@ -401,8 +474,80 @@ class BasketActivity : BaseActivity() {
     }
 
 
+    fun sendNotification(title: String, description: String) {
 
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = title
+            val descriptionText = description
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val mChannel = NotificationChannel(CHANNEL_ID, name, importance)
+            mChannel.description = descriptionText
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
+        val pendingIntent: PendingIntent =
+            PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.mipmap.sym_def_app_icon)
+            .setContentTitle(title)
+            .setContentText(description)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+        with(NotificationManagerCompat.from(this)) {
+            if (ActivityCompat.checkSelfPermission(
+                    this@BasketActivity,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return@with
+            }
+            val NOTIFICATION_ID = 1
+            notify(NOTIFICATION_ID, builder.build())
+        }
+    }
+    fun sendEmail(toEmail: String?,title: String) {
+        try {
+            val props = Properties()
+            props.setProperty("mail.transport.protocol", "smtp")
+            props.setProperty("mail.host", "smtp.gmail.com")
+            props.put("mail.smtp.auth", "true")
+            props.put("mail.smtp.port", "465")
+            props.put("mail.smtp.socketFactory.port", "465")
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
+
+            val session = Session.getDefaultInstance(props, object : Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication {
+                    //от кого
+                    return PasswordAuthentication("isip_m.a.vesenkov@mpt.ru", "mbmtqsqhtxxwurzn")
+                }
+            })
+            val message = MimeMessage(session)//от кого
+            message.setFrom(InternetAddress("isip_m.a.vesenkov@mpt.ru"))//куда
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
+            message.subject = "This is Your Order : "
+            message.setText(title)
+
+            val transport = session.getTransport("smtp")
+            transport.connect()
+            Transport.send(message)
+            transport.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        //то что я хочу
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable("recycler_state_basket", binding.rcViewBasket.layoutManager?.onSaveInstanceState())
+    }
+
+    private fun restoreRecyclerState(savedInstanceState: Bundle?) {
+        savedInstanceState?.getParcelable<Parcelable>("recycler_state_basket")?.let {
+            recyclerViewState = it
+        }
+    }
 }
 

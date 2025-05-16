@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Кнопка добавления пользователя -->
     <ImageButton
         android:id="@+id/btnAddUser"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_plus"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.928"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.023" />
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Заголовок -->
     <LinearLayout
-        android:layout_width="384dp"
-        android:layout_height="46dp"
+        android:id="@+id/qwe"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
-        android:layout_weight="1"
+        android:layout_marginEnd="16dp"
         android:orientation="vertical"
-        android:visibility="visible"
+        app:layout_constraintEnd_toStartOf="@id/btnAddUser"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -36,72 +38,88 @@
             android:text="@string/users_managment"
             android:textSize="18sp"
             android:textStyle="bold" />
-
-
-
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/etSearch"
-        android:layout_width="330dp"
-        android:layout_height="41dp"
-        android:hint="@string/search"
-        android:isScrollContainer="false"
-        android:windowSoftInputMode="adjustResize"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <!-- Поиск -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.283"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.097" />
+        app:layout_constraintTop_toBottomOf="@id/qwe">
 
-    <ImageButton
-        android:id="@+id/btnSearch"
-        android:layout_width="36dp"
-        android:layout_height="35dp"
-        android:background="@android:color/transparent"
-        android:src="@drawable/search_ic"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.957"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.096" />
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:hint="@string/search"
+            android:isScrollContainer="false"
+            android:minHeight="48dp"
+            android:windowSoftInputMode="adjustResize"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnSearch"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/btnSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/search_ic"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- RecyclerView -->
+
+    <!-- Bottom Navigation -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcView"
-        android:layout_width="364dp"
-        android:layout_height="564dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginEnd="5dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="128dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:layout_margin="30dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.486"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.431" />
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout"
+        app:layout_constraintVertical_bias="0.0" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
-        android:layout_width="361dp"
-        android:layout_height="57dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/purple_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.951">
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="3dp">
+            android:layout_marginBottom="3dp"
+            android:orientation="horizontal">
 
+            <!-- Main -->
             <LinearLayout
+                android:id="@+id/layoutMain"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -110,7 +128,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_1" />
+                    android:src="@drawable/btn_1"/>
 
                 <TextView
                     android:id="@+id/textView8144"
@@ -120,14 +138,15 @@
                     android:text="@string/main"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Basket -->
             <LinearLayout
-                android:layout_width="4dp"
+                android:id="@+id/layoutBasket"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -136,7 +155,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_2" />
+                    android:src="@drawable/btn_2"/>
 
                 <TextView
                     android:id="@+id/textView81"
@@ -146,14 +165,15 @@
                     android:text="@string/basket"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Favorite -->
             <LinearLayout
-                android:layout_width="15dp"
+                android:id="@+id/layoutFavorite"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -162,7 +182,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_3" />
+                    android:src="@drawable/btn_3"/>
 
                 <TextView
                     android:id="@+id/textView8112"
@@ -173,14 +193,15 @@
                     android:maxLines="2"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- History -->
             <LinearLayout
+                android:id="@+id/layoutHistory"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -189,7 +210,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_4" />
+                    android:src="@drawable/btn_4"/>
 
                 <TextView
                     android:id="@+id/textView810"
@@ -199,15 +220,15 @@
                     android:text="@string/history"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
-
+            <!-- Profile -->
             <LinearLayout
-                android:layout_width="4dp"
+                android:id="@+id/layoutProfile"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -216,7 +237,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_5" />
+                    android:src="@drawable/btn_5"/>
 
                 <TextView
                     android:id="@+id/textView811"
@@ -226,15 +247,15 @@
                     android:text="@string/profile"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Users -->
             <LinearLayout
                 android:id="@+id/layoutUsers"
-                android:layout_width="31dp"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical"
                 android:visibility="visible">
 
@@ -244,7 +265,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/ic_user" />
+                    android:src="@drawable/ic_user"/>
 
                 <TextView
                     android:id="@+id/textView812"
@@ -255,15 +276,15 @@
                     android:maxLines="4"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Product -->
             <LinearLayout
                 android:id="@+id/layoutProduct"
-                android:layout_width="10dp"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical"
                 android:visibility="visible">
 
@@ -273,8 +294,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-
-                    android:src="@drawable/ic_shoes" />
+                    android:src="@drawable/ic_shoes"/>
 
                 <TextView
                     android:id="@+id/textView8110"
@@ -285,12 +305,8 @@
                     android:maxLines="4"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
         </LinearLayout>
-
-
     </com.google.android.material.bottomnavigation.BottomNavigationView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

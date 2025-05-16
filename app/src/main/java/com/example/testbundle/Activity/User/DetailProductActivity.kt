@@ -54,7 +54,7 @@ class DetailProductActivity : BaseActivity() {
 
 
         selectedSize = savedInstanceState?.getInt(SELECTED_SIZE_KEY) ?: -1
-        productId = intent.getIntExtra("product_id", 0)
+//        productId = intent.getIntExtra("product_id", 0)
         selectedSize = intent.getIntExtra("size_id", -1).takeIf { it != -1 }
             ?: savedInstanceState?.getInt(SELECTED_SIZE_KEY, -1)
                     ?: -1
@@ -108,6 +108,7 @@ class DetailProductActivity : BaseActivity() {
      * Подгрузка данных товара
      */
     private fun loadProductDetails() {
+        productId = intent.getIntExtra("product_id", 0)
         lifecycleScope.launch {
 
             if (selectedSize == -1) {
@@ -249,7 +250,9 @@ class DetailProductActivity : BaseActivity() {
     }
 
     private fun setupClickListeners() {
-        binding.btnArrowBack.setOnClickListener { finish() }
+        binding.btnArrowBack.setOnClickListener {
+            startActivity(Intent(this@DetailProductActivity, ListProductActivity::class.java))
+        }
 
         binding.btnShopNow.setOnClickListener {
             val amountCheck:Int = binding.tvAmountProduct.text.toString().toInt()

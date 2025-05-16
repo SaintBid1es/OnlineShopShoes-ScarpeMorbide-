@@ -21,4 +21,7 @@ data class Item (
     var telephone:String,
     @ColumnInfo(name = "speciality")
     var speciality: String,
+    @ColumnInfo(name = "avatar")
+    var avatar: String?
+
 )

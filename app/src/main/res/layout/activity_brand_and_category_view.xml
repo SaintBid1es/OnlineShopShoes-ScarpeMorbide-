@@ -1,129 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
-
+    <!-- Header Layout -->
     <LinearLayout
-        android:layout_width="356dp"
-        android:layout_height="84dp"
+        android:id="@+id/qwe"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.381"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/tvNameAccount"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvNameAccount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/category_and_brand_managment"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-
-
-        </LinearLayout>
+            android:text="@string/category_and_brand_managment"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/imgExit"
             android:layout_width="42dp"
             android:layout_height="42dp"
-
+            android:layout_marginStart="8dp"
             android:src="@drawable/ic_exit" />
 
         <ImageView
             android:id="@+id/imageView4"
             android:layout_width="42dp"
             android:layout_height="42dp"
+            android:layout_marginStart="8dp"
             android:visibility="gone"
             android:src="@drawable/search_icon" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/textView11"
-        android:layout_width="wrap_content"
+    <!-- Category Section -->
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="124dp"
-        android:text="@string/category"
-        android:textSize="15sp"
-        android:textStyle="bold"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/qwe"
+        android:layout_marginTop="16dp">
 
-    <ImageView
-        android:id="@+id/imgCreateCategory"
-        android:layout_width="45dp"
-        android:layout_height="22dp"
+        <TextView
+            android:id="@+id/textView11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/category"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-        android:layout_marginStart="104dp"
-        android:layout_marginTop="124dp"
-        android:src="@drawable/ic_plus"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <ImageView
+            android:id="@+id/imgCreateCategory"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_plus" />
+    </LinearLayout>
 
+    <!-- Category RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcViewCategory"
-        android:layout_width="350dp"
-        android:layout_height="253dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginEnd="5dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@+id/Brand"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.294"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.257" />
+        app:layout_constraintTop_toBottomOf="@id/textView11"
+        app:layout_constraintHeight_default="percent"
+        app:layout_constraintHeight_percent="0.3" />
 
+    <!-- Brand Section -->
+    <LinearLayout
+        android:id="@+id/Brand"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rcViewCategory"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/brand"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/imgCreateBrand"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_plus" />
+    </LinearLayout>
+
+    <!-- Brand RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcViewBrand"
-        android:layout_width="350dp"
-        android:layout_height="313dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="5dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
         android:orientation="vertical"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.215"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Brand"
-        app:layout_constraintVertical_bias="0.057" />
-
-    <TextView
-        android:id="@+id/Brand"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="21dp"
-        android:text="@string/brand"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rcViewCategory" />
-
-    <ImageView
-        android:id="@+id/imgCreateBrand"
-        android:layout_width="35dp"
-        android:layout_height="24dp"
-
-        android:layout_marginTop="21dp"
-        android:src="@drawable/ic_plus"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.25"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rcViewCategory" />
-
+        app:layout_constraintTop_toBottomOf="@id/Brand"
+        app:layout_constraintHeight_default="percent"
+        app:layout_constraintHeight_percent="0.4" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

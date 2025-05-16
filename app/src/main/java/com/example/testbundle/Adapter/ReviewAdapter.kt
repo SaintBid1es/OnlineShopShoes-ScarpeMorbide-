@@ -1,34 +1,44 @@
 package com.example.testbundle.Adapter
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ReviewItemBinding
+import com.example.testbundle.db.Item
 import com.example.testbundle.db.Reviews
 
 
 class ReviewAdapter(
-    val clientID:Int,
+    val clientID: Int,
     private val clientNames: Map<Int?, String>,
+    private val clientAvatar: Map<Int?, Uri?>,
     private val entities: List<Reviews>,
-    private val onDelete: (id: Int) -> Unit,
-    private val onEdit: (item: Reviews) -> Unit,
+    private val onDelete: (Int) -> Unit,
+    private val onEdit: (Reviews) -> Unit,
 ) : RecyclerView.Adapter<ReviewAdapter.AccountHolder>() {
-
    inner class AccountHolder(
         item: View,
         private val onDelete: (id: Int) -> Unit,
         private val onEdit: (item: Reviews) -> Unit
     ) : RecyclerView.ViewHolder(item) {
-
+         var uri: Uri? = null
         val binding = ReviewItemBinding.bind(item)
-        fun bind(item: Reviews,) = with(binding) {
+        fun bind(item: Reviews) = with(binding) {
             val clientName = clientNames[item.client_id] ?: "Unknown Client"
+            val clientAvatar = clientAvatar[item.client_id]
             tvClientName.text = clientName
             tvTextReview.text = "${item.heading}\n ${item.description}\n ${item.rating}\n ${item.Reviewdate}"
+            if (clientAvatar!="null".toUri()) {
+                ivAvatar.setImageURI(clientAvatar)
+            }else{
+                ivAvatar.setImageResource(R.drawable.avatarmen)
+            }
+
 
             if (clientID!=item.client_id){
                 btnDeleteCard.isVisible = false

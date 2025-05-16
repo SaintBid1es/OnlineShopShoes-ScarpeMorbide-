@@ -5,256 +5,247 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".Activity.User.DetailProductActivity">
 
-
+    <!-- Кнопка назад -->
     <ImageView
         android:id="@+id/btnArrowBack"
-        android:layout_width="31dp"
-        android:layout_height="31dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="8dp"
         android:src="@drawable/arrow_ic"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Кнопка избранного -->
     <ImageView
         android:id="@+id/imgFavorite"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginStart="340dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
         android:background="@drawable/black_bg"
         android:src="@drawable/ic_fav1"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Количество товара -->
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Кол-во:"
+        android:textColor="@color/grey"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/tvAmountProduct"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnArrowBack" />
 
     <TextView
         android:id="@+id/tvAmountProduct"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
+        android:layout_marginStart="8dp"
         android:text="1"
         android:textColor="@color/grey"
-        android:textSize="25sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/imgShoes"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.772"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintStart_toStartOf="@+id/textView2"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.8"
-        tools:text="1000" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/textView2"
+        app:layout_constraintStart_toEndOf="@+id/textView2" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Кол-во:"
-        android:textColor="@color/grey"
-        android:textSize="25sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/imgShoes"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.679"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.8" />
-
+    <!-- Изображение товара -->
     <ImageView
         android:id="@+id/imgShoes"
-        android:layout_width="361dp"
-        android:layout_height="325dp"
-        android:layout_marginTop="64dp"
+        android:layout_width="350dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="16dp"
+        android:adjustViewBounds="true"
         android:background="@drawable/grey_bg"
+        android:scaleType="centerCrop"
         android:src="@drawable/shoes1"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
+    <!-- Рейтинг товара -->
     <TextView
         android:id="@+id/tvRating"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:text="4.1"
-        android:textSize="25sp"
+        android:textSize="20sp"
+        android:layout_marginStart="10dp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imgShoes" />
 
     <ImageView
         android:id="@+id/imgStar"
-        android:layout_width="37dp"
-        android:layout_height="30dp"
-
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="12dp"
         android:src="@drawable/star_ic"
-        android:textSize="25sp"
-        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/tvRating"
         app:layout_constraintStart_toEndOf="@+id/tvRating"
-        app:layout_constraintTop_toBottomOf="@+id/imgShoes" />
+        app:layout_constraintTop_toTopOf="@+id/tvRating" />
 
     <TextView
         android:id="@+id/tvCountReviews"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
         android:layout_marginStart="8dp"
-        android:layout_marginTop="20dp"
         android:text="(100)"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/imgStar"
         app:layout_constraintStart_toEndOf="@+id/imgStar"
-        app:layout_constraintTop_toBottomOf="@+id/imgShoes" />
+        app:layout_constraintTop_toTopOf="@+id/imgStar" />
 
+    <!-- Название товара -->
     <TextView
         android:id="@+id/tvNameProduct"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="44dp"
-        android:textSize="25sp"
+        android:layout_marginTop="16dp"
+        android:textSize="20sp"
         android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/tvValuta"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgShoes"
+        app:layout_constraintTop_toBottomOf="@+id/tvRating"
         tools:text="Nike Sport" />
 
+    <!-- Цена товара -->
     <TextView
-        android:id="@+id/tvCreateReviews"
+        android:id="@+id/tvValuta"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="244dp"
-        android:layout_marginTop="56dp"
-        android:text="Оставить отзыв?"
-        android:textColor="@color/purple"
-        android:textSize="15sp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/valuta"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgShoes" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvCostProduct"
+        app:layout_constraintEnd_toStartOf="@+id/tvCostProduct" />
 
     <TextView
         android:id="@+id/tvCostProduct"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="288dp"
-        android:layout_marginTop="24dp"
-        android:textSize="25sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgShoes"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvRating"
         tools:text="260" />
 
+    <!-- Кнопка отзыва -->
     <TextView
-        android:id="@+id/tvValuta"
+        android:id="@+id/tvCreateReviews"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="264dp"
-        android:layout_marginTop="24dp"
-        android:textSize="25sp"
+        android:layout_marginTop="8dp"
+        android:text="Оставить отзыв?"
+        android:textColor="@color/purple"
+        android:textSize="14sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgShoes"
-        tools:text="@string/valuta" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvNameProduct" />
 
+    <!-- Выбор размера -->
     <TextView
+        android:id="@+id/textView17"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="472dp"
+
         android:text="@string/selected_size"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tvCreateReviews" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sizeList"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView17" />
+
+    <!-- Описание товара -->
+    <TextView
+        android:id="@+id/tvDescriptionProduct"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/grey"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sizeList"
+        tools:text="DescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescription" />
+
+    <!-- Бренд и категория -->
     <TextView
         android:id="@+id/textView15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="676dp"
+        android:layout_marginTop="16dp"
         android:text="@string/brand"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textView16"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="708dp"
-        android:text="@string/category"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/sizeList"
-        android:layout_width="369dp"
-        android:layout_height="71dp"
-        android:layout_marginTop="504dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.642"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tvDescriptionProduct" />
 
     <TextView
         android:id="@+id/tvBrand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
-
-        android:layout_marginStart="112dp"
-        android:layout_marginTop="676dp"
+        android:layout_marginStart="16dp"
         android:text="ThisBrand"
-        android:textSize="18sp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBaseline_toBaselineOf="@+id/textView15"
+        app:layout_constraintStart_toEndOf="@+id/textView15" />
+
+    <TextView
+        android:id="@+id/textView16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/category"
+        android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView15" />
 
     <TextView
         android:id="@+id/tvCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
-        android:layout_marginStart="140dp"
-        android:layout_marginTop="708dp"
+        android:layout_marginStart="16dp"
         android:text="ThisCategory"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/textView16"
+        app:layout_constraintStart_toEndOf="@+id/textView16" />
 
-    <TextView
-        android:id="@+id/tvDescriptionProduct"
-        android:layout_width="345dp"
-        android:layout_height="73dp"
-        android:layout_marginStart="36dp"
-        android:layout_marginTop="596dp"
-        android:textColor="@color/grey"
-        android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="DescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescription" />
-
+    <!-- Кнопка добавления в корзину -->
     <Button
         android:id="@+id/btnShopNow"
-        android:layout_width="320dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="744dp"
         android:background="@drawable/purple_bg"
         android:text="@string/add_to_basket"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.505"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView16"
+        app:layout_constraintVertical_bias="0.226" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

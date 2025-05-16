@@ -23,6 +23,7 @@ class EditAccountCardActivity : BaseActivity() {
 
     lateinit var binding: ActivityEditAccountCardBinding
     val viewModel : MainViewModel by viewModels<MainViewModel>()
+     var avatar: String?=""
     override fun onCreate(savedInstanceState: Bundle?) {
         val db = MainDb.getDb(this)
         super.onCreate(savedInstanceState)
@@ -42,7 +43,7 @@ class EditAccountCardActivity : BaseActivity() {
                     binding.etSurName.setText(it.SurName)
                     binding.etPassword.setText(it.password)
                     binding.etTelephone.setText(it.telephone)
-
+                    avatar = it.avatar
                     val specialityArray = resources.getStringArray(R.array.speciality)
                     val position = specialityArray.indexOf(it.speciality)
                     if (position >= 0) {
@@ -62,6 +63,7 @@ class EditAccountCardActivity : BaseActivity() {
             val surname = binding.etSurName.text.toString()
             val telephone = binding.etTelephone.text.toString()
             val specifer = binding.SpinnerSpecialitety.selectedItem.toString()
+
             val isValid = validatePassword(password)
             val isNumber = "[0123456789]".toRegex()
 
@@ -127,7 +129,7 @@ class EditAccountCardActivity : BaseActivity() {
                     binding.etLogin.error = getString(R.string.this_email_is_used)
                 } else {
 
-                    val updatedUser = Item(id, password, name, surname, email, telephone, specifer)
+                    val updatedUser = Item(id, password, name, surname, email, telephone, specifer,avatar)
                     viewModel.updateItem(updatedUser)
                     Toast.makeText(
                         this@EditAccountCardActivity,

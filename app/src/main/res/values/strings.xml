@@ -168,15 +168,15 @@
     <string name="size">size:</string>
     <string name="order">your order:</string>
     <string name="registerAccount">Register Account</string>
-    <string name="SuccesregisterAccount">Account succes registered</string>
+    <string name="SuccesregisterAccount">Account success registered</string>
     <string name="insertYourEmail">Insert your email</string>
     <string name="insertCode">Insert code</string>
     <string name="confirmEmail">Confirm email</string>
     <string name="CVC">CVC</string>
     <string name="succesCheckEmail">You have successfully verified your email</string>
     <string name="unsuccessfullyCheckEmail">You have unsuccessfully verified your email</string>
-    <string name="category_and_brand_managment">Category And Brand Managment</string>
-    <string name="users_managment">Users managment</string>
+    <string name="category_and_brand_managment">Category And Brand Management</string>
+    <string name="users_managment">Users management</string>
     <string name="product_management">Product management</string>
     <string name="order_history">Order History</string>
 
@@ -184,6 +184,7 @@
     <string-array name="speciality">
         <item>Administrator</item>
         <item>Client</item>
+        <item>Analyst</item>
 
     </string-array>
     <string-array name="brand">
@@ -214,5 +215,45 @@
         <item>Tinkoff Bank</item>
     </string-array>
 
+    <string name="analyticalPieChartAmount">Всего</string>
+    <string name="graphic">graphic</string>
+    <string-array name="analyticalPieChartColorArray">
+        <item>#E480F4</item>
+        <item>#6CC3F3</item>
+        <item>#7167ED</item>
+        <item>#D9455F</item>
+        <item>#6054EA</item>
+    </string-array>
+
+    <string-array name="analyticalPieChartColorArray2">
+        <item>#58D984</item>
+        <item>#D9455F</item>
+    </string-array>
+
+    <string-array name="analyticalPieChartColorArray3">
+        <item>#65ae07</item>
+        <item>#dafd95</item>
+        <item>#306400</item>
+    </string-array>
+
+    <string-array name="analyticalPieChartColorArray5">
+        <item>#81BECE</item>
+        <item>#E9E9E9</item>
+        <item>#E38664</item>
+        <item>#e4d6f8</item>
+        <item>#5BA0BF</item>
+        <item>#aaa2d8</item>
+        <item>#a27eb8</item>
+        <item>#ED413E</item>
+        <item>#EFB786</item>
+        <item>#604d9e</item>
+    </string-array>
+
+    <string-array name="analyticalPieChartColorArray6">
+        <item>#DD2255</item>
+        <item>#FC5F6A</item>
+        <item>#E7242D</item>
+        <item>#F3BFC3</item>
+    </string-array>
 
 </resources>

@@ -20,9 +20,13 @@
         android:theme="@style/Theme.TestBundle"
         tools:targetApi="31">
         <activity
-            android:name=".Activity.User.ForgenPasswordActivity"
-            android:windowSoftInputMode="adjustPan"
+            android:name=".Activity.Analyst.GraphicActivity"
+            android:theme="@style/Theme.Material3.Dark"
             android:exported="false" />
+        <activity
+            android:name=".Activity.User.ForgenPasswordActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".Activity.User.UpdateInformationActivity"
             android:exported="false"

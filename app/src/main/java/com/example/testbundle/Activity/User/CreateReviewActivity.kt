@@ -41,7 +41,6 @@ class CreateReviewActivity : BaseActivity() {
             val header = binding.etHeadingReview.text.toString().trim()
             val description = binding.etDescriptionReview.text.toString().trim()
             val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            //val rating = binding.etRating.text.toString().toDouble()
             val rating = binding.spinnerRating.selectedItemPosition.toDouble()+1
             val product_id = intent.getIntExtra("product_id",-1)
             val review = Reviews(null,header,description,date,rating, client_id = idUser,product_id)
@@ -49,13 +48,18 @@ class CreateReviewActivity : BaseActivity() {
             viewModel.insertReviews(review)
             Toast.makeText(this@CreateReviewActivity,
                 "CreateReview", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this@CreateReviewActivity,DetailProductActivity::class.java))
+            val i = Intent(this@CreateReviewActivity, DetailProductActivity::class.java)
+            i.putExtra("product_id",product_id)
+            startActivity(i)
         }
         /**
          * Кнопка назад
          */
         binding.btnArrowBack.setOnClickListener {
-            startActivity(Intent(this@CreateReviewActivity,DetailProductActivity::class.java))
+            val product_id = intent.getIntExtra("product_id",-1)
+            val i = Intent(this@CreateReviewActivity, DetailProductActivity::class.java)
+            i.putExtra("product_id",product_id)
+            startActivity(i)
         }
 
     }

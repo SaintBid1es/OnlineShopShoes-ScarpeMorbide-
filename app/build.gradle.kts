@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation ("de.hdodenhof:circleimageview:3.1.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.21")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.21")
     implementation("com.google.code.gson:gson:2.10.1")

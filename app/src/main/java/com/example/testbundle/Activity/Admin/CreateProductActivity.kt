@@ -25,6 +25,7 @@ import com.example.testbundle.ProductImage
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityCreateProductBinding
+import com.example.testbundle.db.Brand
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Products
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +81,12 @@ class CreateProductActivity : BaseActivity() {
 
         binding.btnImage.setOnClickListener {
             checkAndRequestPermission()
+        }
+        binding.imgCreateCategory.setOnClickListener {
+            startActivity(Intent(this@CreateProductActivity, BrandAndCategoryViewActivity::class.java))
+        }
+        binding.imgCreateBrand.setOnClickListener {
+            startActivity(Intent(this@CreateProductActivity, BrandAndCategoryViewActivity::class.java))
         }
     }
 

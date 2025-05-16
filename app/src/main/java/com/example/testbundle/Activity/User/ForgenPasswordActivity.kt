@@ -61,6 +61,10 @@ class ForgenPasswordActivity : AppCompatActivity() {
                 binding.etLogin.error = getString(R.string.email_and_password_cannot_be_empty)
                 return@setOnClickListener
             }
+            if (!isValidEmail(email)) {
+                binding.etLogin.error = "Некорректный формат email"
+                return@setOnClickListener
+            }
 
 
 
@@ -223,7 +227,7 @@ class ForgenPasswordActivity : AppCompatActivity() {
                 it.email == email
 
             }
-            val correctUser = Item(user!!.id,password,user.Name,user.SurName,user.email,user.telephone,user.speciality)
+            val correctUser = Item(user!!.id,password,user.Name,user.SurName,user.email,user.telephone,user.speciality,user.avatar)
             viewModel.updateItem(correctUser)
         }
 

@@ -129,7 +129,8 @@ class MainActivity : BaseActivity() {
             "Vesenkov",
             "markVesna@gmail.com",
             "+79990008912",
-            getString(R.string.Administarator)
+            getString(R.string.Administarator),
+            null
         )
 
         db.getDao().insertItem(item)

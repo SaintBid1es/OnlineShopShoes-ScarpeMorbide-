@@ -185,8 +185,7 @@ class ListProductActivity : BaseActivity() {
                 val isAdmin = user.speciality == "Администратор" || user.speciality == "Administrator"
                 binding.layoutProduct.isVisible = isAdmin
                 binding.layoutUsers.isVisible = isAdmin
-                binding.imgCreateBrand.isVisible = isAdmin
-                binding.imgCreateCategory.isVisible = isAdmin
+
             }
         }
     }

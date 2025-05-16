@@ -155,7 +155,8 @@ class RegisterActivity : BaseActivity() {
                         surname,
                         email,
                         telephone,
-                        getString(R.string.client)
+                        getString(R.string.client),
+                        null
                     )
                     viewModel.insertItem(item)
                     sendNotification(getString(R.string.registerAccount),getString(R.string.SuccesregisterAccount))
@@ -231,7 +232,8 @@ class RegisterActivity : BaseActivity() {
             "Vesenkov",
             "markVesna@gmail.com",
             "+79990008912",
-            getString(R.string.Administarator)
+            getString(R.string.Administarator),
+            null
         )
         lifecycleScope.launch {
             db.getDao().insertItem(item)

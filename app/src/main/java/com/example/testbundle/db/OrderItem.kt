@@ -29,3 +29,8 @@ data class OrderItem(
     var price: Double,
     var size:Int
 )
+data class SalesData(
+    val name: String,
+    val quantity: Int,
+    val type: String // "product", "brand", или "category"
+)

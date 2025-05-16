@@ -85,7 +85,6 @@ class UpdateInformationActivity : BaseActivity() {
          */
         binding.btnUpdate.setOnClickListener {
             val email = binding.etLogin.text?.toString()
-
             val name = binding.etName.text.toString()
             val telephone = binding.etTelephone.text.toString()
             check = emailMap.get(binding.etLogin.text.toString())
@@ -132,14 +131,21 @@ class UpdateInformationActivity : BaseActivity() {
 
 
                 if (validaciaTrue && !isEmailUsedByOthers) {
-                    val pass = binding.etPassword.text.toString()
-                    val name = binding.etName.text.toString()
-                    val surname = binding.etSurName.text.toString()
-                    val email = binding.etLogin.text.toString()
-                    val telephone = binding.etTelephone.text.toString()
-                    val speciality = binding.tvSpecialitetyVivod.text.toString()
-                    val updatedUser = Item(idAccount, pass, name, surname, email, telephone, speciality)
                     lifecycleScope.launch {
+                        val account = db.getDao().getAccountById(idAccount)
+
+
+                        val pass = binding.etPassword.text.toString()
+                        val name = binding.etName.text.toString()
+                        val surname = binding.etSurName.text.toString()
+                        val email = binding.etLogin.text.toString()
+                        val telephone = binding.etTelephone.text.toString()
+                        val speciality = binding.tvSpecialitetyVivod.text.toString()
+
+                        val updatedUser =
+                            Item(idAccount, pass, name, surname, email, telephone, speciality,account.avatar)
+
+
                         viewModel.updateItem(updatedUser)
                         prefs.edit { preferences ->
                             preferences[ProfileActivity.EMAIL_KEY] = email

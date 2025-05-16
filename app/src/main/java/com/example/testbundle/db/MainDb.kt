@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database (entities =
 [Item::class, Products::class, Basket::class, Brand::class, Category::class,
     Favorite::class, CategoryFilter::class, BrandFilter::class, Order::class,OrderItem::class,Reviews::class,ImageEntity::class
-    ], version = 20
+    ], version = 21
 )
 
 
@@ -23,6 +23,7 @@ abstract class MainDb:RoomDatabase() {
         fun getDb(context: Context): MainDb {
             return databaseBuilder(context, MainDb::class.java, "database")
                 .addMigrations(MainDb.MIGRATION_1_2)
+                .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
         }

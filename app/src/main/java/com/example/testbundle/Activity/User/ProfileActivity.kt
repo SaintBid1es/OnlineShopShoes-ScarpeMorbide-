@@ -2,9 +2,13 @@ package com.example.testbundle.Activity.User
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_OPEN_DOCUMENT
+import android.net.Uri
 import android.os.Bundle
+import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
@@ -18,6 +22,7 @@ import androidx.transition.Visibility
 import com.example.shoesonlineshop.activity.BaseActivity
 import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.Admin.ListProductAdminActivity
+import com.example.testbundle.Activity.Analyst.GraphicActivity
 import com.example.testbundle.Activity.DataStoreRepo.Companion.USER_ID_KEY
 import com.example.testbundle.Activity.MainActivity
 import com.example.testbundle.Activity.User.ListProductActivity.Companion.idUser
@@ -31,6 +36,7 @@ import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityProfileBinding
 import com.example.testbundle.db.Brand
 import com.example.testbundle.db.Category
+import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +50,8 @@ class ProfileActivity : BaseActivity() {
     val viewModel: ProductViewModel by viewModels()
     val viewModelBrand: BrandViewModel by viewModels()
     val viewModelCategory: CategoryViewModel by viewModels()
-
+    val viewModelClient: MainViewModel by viewModels()
+    private lateinit var Client: Item
     lateinit var prefs : DataStore<androidx.datastore.preferences.core.Preferences>
     companion object {
         val EMAIL_KEY = stringPreferencesKey("email")
@@ -52,6 +59,7 @@ class ProfileActivity : BaseActivity() {
         var idAccount = 0
         var language = false
     }
+    val MY_REQUEST_CODE1 = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val db = MainDb.getDb(this)
@@ -97,6 +105,10 @@ class ProfileActivity : BaseActivity() {
             startActivity(Intent(this@ProfileActivity, UpdateInformationActivity::class.java))
             intent.putExtra("item_id", idAccount)
         }
+        binding.imgGraphic.setOnClickListener {
+            startActivity(Intent(this@ProfileActivity, GraphicActivity::class.java))
+        }
+
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
@@ -112,7 +124,48 @@ class ProfileActivity : BaseActivity() {
         binding.btnLanguage.setOnClickListener {
                 changeLanguage()
         }
+        binding.btnImageAddPhotoProfile.setOnClickListener {
+            val intent = Intent(ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "image/*"
+            }
+            startActivityForResult(intent, MY_REQUEST_CODE1)
+        }
+        binding.btnImageResetPhotoProfile.setOnClickListener {
+            binding.ivAvatarProfile.setImageResource(R.drawable.avatarmen)
+            lifecycleScope.launch {
+                val user = db.getDao().getAccountById(idAccount)
+                val updatedUser = user.copy(avatar = null)
+                viewModelClient.updateItem(updatedUser)
+            }
 
+        }
+
+
+    }
+    // I override system function
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == RESULT_OK && requestCode == MY_REQUEST_CODE1) {
+            data?.data?.let { uri ->
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+
+                show_URI_in_ImageView(uri)//content://com.android.providers.media.documents/document/image%3A1000038190
+                val UpdateClient = Client.copy(avatar = uri.toString())
+                viewModelClient.updateItem(UpdateClient)
+            }
+        }
+    }
+
+    // my function for image view
+    fun show_URI_in_ImageView(uri: Uri?)
+    {
+        val myImageView = findViewById(R.id.ivAvatarProfile) as ImageView
+        myImageView.setImageURI(uri)
 
     }
 
@@ -131,11 +184,25 @@ class ProfileActivity : BaseActivity() {
                     tvSurName.text = it.SurName
                     tvTelephone.text = it.telephone
                     tvSpeciality.text = it.speciality
+                    if (!it.avatar.isNullOrEmpty()){
+                        ivAvatarProfile.setImageURI(it.avatar!!.toUri())
+
+                    }else {
+                        ivAvatarProfile.setImageResource(R.drawable.avatarmen)
+                    }
                     idAccount = it.id!!
+                    Client = Item(it.id,it.password,it.Name,it.SurName,it.email,it.telephone,it.speciality,null)
                 }
                 if (it.speciality == "Администратор" || it.speciality == "Administrator" ) {
                     binding.layoutUsers.isVisible = true
                     binding.layoutProduct.isVisible = true
+                }
+                if (it.speciality == "Аналитик" || it.speciality == "Analyst" ) {
+                    binding.layoutMain.isVisible = false
+                    binding.layoutBasket.isVisible = false
+                    binding.layoutFavorite.isVisible = false
+                    binding.layoutHistory.isVisible = false
+                    binding.layoutGraphic.isVisible = true
                 }
             }
         }

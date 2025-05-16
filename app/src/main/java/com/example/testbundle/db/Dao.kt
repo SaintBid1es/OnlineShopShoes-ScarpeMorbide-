@@ -42,6 +42,8 @@ interface Dao {
     suspend fun getProductById(id_items: Int?):Products?
 
 
+
+
     @Insert
     suspend fun insertBrand(item: Brand)
     @Query("SELECT * FROM brand")
@@ -56,6 +58,7 @@ interface Dao {
     suspend fun getBrandById(id_brand: Int?):Brand?
     @Query("SELECT nameBrand FROM brand WHERE id = :brandId")
     suspend fun getBrandNameById(brandId: Int): String?
+
 
 
     @Insert
@@ -138,6 +141,13 @@ interface Dao {
     suspend fun updateOrder(item: Order)
     @Query("SELECT * FROM `order` WHERE id = :id_order")
     suspend fun getOrderById(id_order: Int?):Order
+    @Query("SELECT SUM(totalPrice) FROM `order`")
+    suspend fun summTotalPrice(): Int
+    @Query("SELECT SUM(totalPrice) / COUNT(*) FROM `order`")
+    suspend fun avgTotalPrice(): Int
+
+
+
 
     @Query("SELECT * FROM order_items where orderId = :id ")
     suspend fun getProductOrderItemById(id:UUID):List<OrderItem>
@@ -174,6 +184,8 @@ interface Dao {
 
     @Update
     suspend fun updateRewiews(item: Reviews)
+    @Query("SELECT SUM(rating) / COUNT(*) FROM reviews")
+    suspend fun avgRating() : Int
 
     @Query("SELECT * FROM reviews WHERE product_id = :id_product")
     fun getReviewsByProduct(id_product: Int?): Flow<List<Reviews>>
@@ -191,16 +203,63 @@ interface Dao {
     @Insert
     suspend fun insertImage(image: com.example.testbundle.db.ImageEntity): Long
 
-    // Для вставки нескольких изображений
     @Insert
     suspend fun insertImages(images: List<ImageEntity>): List<Long>
 
-    // Для получения изображения по ID
     @Query("SELECT * FROM images WHERE id = :imageId")
     suspend fun getImageById(imageId: Int): ImageEntity?
 
     @Query("UPDATE products SET imageId = :imageId, imageUri = :imageUri WHERE id = :productId")
     suspend fun updateProductImage(productId: Int, imageId: Int, imageUri: String?)
 
+    @Query("""
+    SELECT 'Бренд: ' || brand.nameBrand as label, SUM(order_items.quantity) as total 
+    FROM order_items
+    JOIN products ON order_items.productId = products.id
+    JOIN brand ON products.brandId = brand.id
+    GROUP BY brand.nameBrand
+    
+    UNION ALL
+    
+    SELECT 'Категория: ' || category.nameCategory as label, SUM(order_items.quantity) as total 
+    FROM order_items
+    JOIN products ON order_items.productId = products.id
+    JOIN category ON products.categoryId = category.id
+    GROUP BY category.nameCategory
+    
+    ORDER BY total DESC
+""")
+    suspend fun getCombinedBrandCategoryStats(): List<CombinedStat>
 
+    data class CombinedStat(val label: String, val total: Int)
+
+    @Query("SELECT * FROM products WHERE id IN (:ids)")
+    suspend fun getProductsByIds(ids: List<Int>): List<Products>
+
+    @Query("SELECT * FROM brand WHERE id IN (:ids)")
+    suspend fun getBrandsByIds(ids: List<Int>): List<Brand>
+
+    @Query("SELECT * FROM category WHERE id IN (:ids)")
+    suspend fun getCategoriesByIds(ids: List<Int>): List<Category>
+
+    @Query("""
+    SELECT SUM(totalPrice) 
+    FROM `order` 
+    WHERE date(orderDate) = date('now')
+""")
+    suspend fun getDailyRevenue(): Double?
+
+    @Query("""
+    SELECT SUM(totalPrice) 
+    FROM `order` 
+    WHERE strftime('%Y-%m', orderDate) = strftime('%Y-%m', 'now')
+""")
+    suspend fun getMonthlyRevenue(): Double?
+
+    @Query("""
+    SELECT SUM(totalPrice) 
+    FROM `order` 
+    WHERE strftime('%Y', orderDate) = strftime('%Y', 'now')
+""")
+    suspend fun getYearlyRevenue(): Double?
 }

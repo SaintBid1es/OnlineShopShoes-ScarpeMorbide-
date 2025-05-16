@@ -1,87 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
+    <!-- Header Section -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:id="@+id/qwe"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="53dp"
+        <TextView
+            android:id="@+id/tvNameAccount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:text="@string/product_management"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
 
-            <TextView
-                android:id="@+id/tvNameAccount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/product_management"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-
-
-
-        </LinearLayout>
-
-        <ImageView
+        <ImageButton
             android:id="@+id/imgCreateProduct"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_plus"/>
 
-            android:src="@drawable/ic_plus" />
-
-        <ImageView
+        <ImageButton
             android:id="@+id/imageView4"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:visibility="gone"
-
-            android:src="@drawable/search_icon" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/search_icon"/>
     </LinearLayout>
 
+    <!-- Products List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcView"
-        android:layout_width="365dp"
-        android:layout_height="610dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="72dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.384" />
+        app:layout_constraintTop_toBottomOf="@id/qwe"/>
 
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
-        android:layout_width="361dp"
-        android:layout_height="57dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/purple_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.951">
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="3dp">
+            android:layout_marginBottom="3dp"
+            android:orientation="horizontal">
 
+            <!-- Main -->
             <LinearLayout
+                android:id="@+id/layoutMain"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -90,7 +93,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_1" />
+                    android:src="@drawable/btn_1"/>
 
                 <TextView
                     android:id="@+id/textView8144"
@@ -100,14 +103,15 @@
                     android:text="@string/main"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Basket -->
             <LinearLayout
-                android:layout_width="4dp"
+                android:id="@+id/layoutBasket"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -116,7 +120,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_2" />
+                    android:src="@drawable/btn_2"/>
 
                 <TextView
                     android:id="@+id/textView81"
@@ -126,14 +130,15 @@
                     android:text="@string/basket"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Favorite -->
             <LinearLayout
-                android:layout_width="15dp"
+                android:id="@+id/layoutFavorite"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -142,7 +147,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_3" />
+                    android:src="@drawable/btn_3"/>
 
                 <TextView
                     android:id="@+id/textView8112"
@@ -153,14 +158,15 @@
                     android:maxLines="2"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- History -->
             <LinearLayout
+                android:id="@+id/layoutHistory"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -169,7 +175,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_4" />
+                    android:src="@drawable/btn_4"/>
 
                 <TextView
                     android:id="@+id/textView810"
@@ -179,15 +185,15 @@
                     android:text="@string/history"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
-
+            <!-- Profile -->
             <LinearLayout
-                android:layout_width="4dp"
+                android:id="@+id/layoutProfile"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
@@ -196,7 +202,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/btn_5" />
+                    android:src="@drawable/btn_5"/>
 
                 <TextView
                     android:id="@+id/textView811"
@@ -206,15 +212,15 @@
                     android:text="@string/profile"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Users -->
             <LinearLayout
                 android:id="@+id/layoutUsers"
-                android:layout_width="31dp"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical"
                 android:visibility="visible">
 
@@ -224,7 +230,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/ic_user" />
+                    android:src="@drawable/ic_user"/>
 
                 <TextView
                     android:id="@+id/textView812"
@@ -235,15 +241,15 @@
                     android:maxLines="4"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
 
+            <!-- Product -->
             <LinearLayout
                 android:id="@+id/layoutProduct"
-                android:layout_width="10dp"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
+                android:layout_weight="1"
                 android:orientation="vertical"
                 android:visibility="visible">
 
@@ -253,8 +259,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:layout_marginTop="8dp"
-
-                    android:src="@drawable/ic_shoes" />
+                    android:src="@drawable/ic_shoes"/>
 
                 <TextView
                     android:id="@+id/textView8110"
@@ -265,15 +270,8 @@
                     android:maxLines="4"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="9sp" />
-
+                    android:textSize="9sp"/>
             </LinearLayout>
         </LinearLayout>
-
-
     </com.google.android.material.bottomnavigation.BottomNavigationView>
-
-
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>

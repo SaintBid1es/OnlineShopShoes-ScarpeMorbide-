@@ -3,6 +3,7 @@ package com.example.testbundle.Adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testbundle.R
 import com.example.testbundle.databinding.AccountItemBinding
@@ -30,6 +31,13 @@ class AccountCardAdapter(
                 itemView.context.getString(R.string.account_password), "***********", // Password
                 itemView.context.getString(R.string.account_speciality), item.speciality // Speciality
             )
+
+
+            if (!item.avatar.isNullOrEmpty()){
+                ivAvatar.setImageURI(item.avatar!!.toUri())
+            }else{
+                ivAvatar.setImageResource(R.drawable.avatarmen)
+            }
 
             btnDeleteCard.setOnClickListener {
                 onDelete(item.id!!)

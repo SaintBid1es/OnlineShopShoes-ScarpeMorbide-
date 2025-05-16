@@ -36,6 +36,7 @@ class ListEmployeeActivity : BaseActivity() {
 
     private var currentUserId:Int?=-1
 
+
     val viewModel : MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,6 +91,7 @@ class ListEmployeeActivity : BaseActivity() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel?.state?.collect{
                     onUpdateView(it)
+
                 }
             }
         }

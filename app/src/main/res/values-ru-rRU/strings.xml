@@ -184,6 +184,7 @@
     <string-array name="speciality">
         <item>Администратор</item>
         <item>Клиент</item>
+        <item>Аналитик</item>
 
     </string-array>
     <string-array name="brand">
@@ -197,7 +198,7 @@
         <item>Summer</item>
 
     </string-array>
-
+    <string name="graphic">График</string>
 
 
 
