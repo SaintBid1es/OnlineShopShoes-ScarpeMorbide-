@@ -30,7 +30,7 @@ class CategoryAdapter(
 
             tvInfCategory.text = itemView.context.getString(
                 R.string.category_info_format,
-                itemView.context.getString(R.string.category_name), item.name
+                itemView.context.getString(R.string.category_name), item.namecategory
             )
 
             btnDeleteCard.setOnClickListener {

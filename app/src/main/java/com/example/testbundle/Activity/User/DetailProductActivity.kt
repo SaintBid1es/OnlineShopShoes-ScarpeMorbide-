@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.dataStore
 import com.example.testbundle.Adapter.SizeAdapter
 import com.example.testbundle.BasketViewModel
@@ -25,19 +27,22 @@ import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityDetailProductBinding
 import com.example.testbundle.db.Basket
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class DetailProductActivity : BaseActivity() {
     private lateinit var binding: ActivityDetailProductBinding
-    private lateinit var db: MainDb
+
     private lateinit var prefs: DataStore<androidx.datastore.preferences.core.Preferences>
     private var sizeAdapter: SizeAdapter? = null
     private var selectedSize: Int = -1
     private var productId: Int = 0
     private val viewModelBasket: BasketViewModel by viewModels()
-    private val viewModelProducts: ProductViewModel by viewModels()
-
+    private val productApi = RetrofitClient.apiService
     companion object {
         var idUser: Int = 0
         private const val SIZE_PREFIX = "size_product_"
@@ -47,14 +52,14 @@ class DetailProductActivity : BaseActivity() {
     @SuppressLint("ResourceAsColor")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        db = MainDb.getDb(this)
+
         prefs = applicationContext.dataStore
         binding = ActivityDetailProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
 
         selectedSize = savedInstanceState?.getInt(SELECTED_SIZE_KEY) ?: -1
-//        productId = intent.getIntExtra("product_id", 0)
+
         selectedSize = intent.getIntExtra("size_id", -1).takeIf { it != -1 }
             ?: savedInstanceState?.getInt(SELECTED_SIZE_KEY, -1)
                     ?: -1
@@ -97,10 +102,11 @@ class DetailProductActivity : BaseActivity() {
      * @param email[String] password[String]
      */
     private fun SearchUserId(email: String?, password: String?) {
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItems().asLiveData().observe(this) { list ->
+        lifecycleScope.launch {
+            val list = productApi.getUsers()
             val user = list.find { it.email == email && it.password == password }
             idUser = user!!.id!!
+
         }
     }
 
@@ -118,20 +124,19 @@ class DetailProductActivity : BaseActivity() {
                 sizeAdapter?.setSelectedPosition(selectedSize)
                 checkProductInBasket(selectedSize)
             }
-            val product = db.getDao().getProductById(productId) ?: return@launch
+            val product = productApi.getProductsByID(productId) ?: return@launch
             binding.tvNameProduct.text = product.name
             binding.tvDescriptionProduct.text = product.description
-            binding.tvCostProduct.text = "$${product.cost}"
-            if (!product.imageUri.isNullOrEmpty()) {
+            binding.tvCostProduct.text = "${product.cost}"
+            if (!product.imageuri.isNullOrEmpty()) {
                 try {
                     // Check if the URI is already complete or just a filename
-                    val imageUri = if (product.imageUri.startsWith("content://")) {
-                        Uri.parse(product.imageUri)
+                    val imageUri = if (product.imageuri.startsWith("content://")) {
+                        Uri.parse(product.imageuri)
                     } else {
                         // Construct proper URI for the image file
-                        Uri.parse("content://com.example.testbundle.fileprovider/product_images/${product.imageUri}")
+                        Uri.parse("content://com.example.testbundle.fileprovider/product_images/${product.imageuri}")
                     }
-
                     runOnUiThread {
                         Glide.with(this@DetailProductActivity)
                             .load(imageUri)
@@ -146,7 +151,7 @@ class DetailProductActivity : BaseActivity() {
                 }
             } else {
                 runOnUiThread {
-                    binding.imgShoes.setImageResource(product.imageId ?: R.drawable.avatarmen)
+                    binding.imgShoes.setImageResource(product.imageid ?: R.drawable.avatarmen)
                 }
             }
 
@@ -159,11 +164,13 @@ class DetailProductActivity : BaseActivity() {
                 binding.tvRating.text = "${String.format("%.2f", rating)}"
             }
             binding.tvCountReviews.text = viewModelBasket.countProductById(productId).toString()
-            db.getDao().getBrandNameById(product.brandId)?.let {
-                binding.tvBrand.text = it
-            }
-            db.getDao().getCategoryNameById(product.category)?.let {
-                binding.tvCategory.text = it
+            lifecycleScope.launch {
+                val brand = productApi.getBrandNameById(product.brandid)
+                    binding.tvBrand.text = brand
+
+              val category =  productApi.getCategoryNameById(product.categoryid)
+                    binding.tvCategory.text = category
+
             }
         }
     }
@@ -213,7 +220,7 @@ class DetailProductActivity : BaseActivity() {
      */
     private fun checkProductInBasket(size: Int) {
         lifecycleScope.launch {
-            val count = db.getDao().getBasketItemByProductAndSize(size, productId, idUser) ?: 0
+            val count = productApi.getBasketItemByProductAndSize(size, productId, idUser) ?: 0
             if (count > 0) {
                 setProductInBasketUI()
             } else {
@@ -277,7 +284,7 @@ class DetailProductActivity : BaseActivity() {
      */
     private fun addToBasket() {
         lifecycleScope.launch {
-            val existingCount = db.getDao().getBasketItemByProductAndSize(
+            val existingCount = productApi.getBasketItemByProductAndSize(
                 selectedSize, productId, idUser
             ) ?: 0
 
@@ -294,9 +301,9 @@ class DetailProductActivity : BaseActivity() {
 
             val basketItem = Basket(
                 id = null,
-                client_id = idUser,
-                product_id = productId,
-                count = 1,
+                clientId = idUser,
+                productId = productId,
+                countbasket = 1,
                 size = selectedSize
             )
 

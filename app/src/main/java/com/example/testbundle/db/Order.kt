@@ -18,11 +18,11 @@ data class Order(
     @PrimaryKey
     val id:UUID = UUID.randomUUID(),
     @ColumnInfo(name = "client_id")
-    var client_id:Int,
+    var clientId:Int,
     @ColumnInfo(name = "orderDate")
-    var orderDate:String,
+    var orderdate:String,
     @ColumnInfo(name = "totalPrice")
-    var totalPrice:Double,
+    var totalprice:Double,
 )
 data class OrderModel(
     val id:UUID,

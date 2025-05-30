@@ -18,6 +18,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.Admin.ListProductAdminActivity
 import com.example.testbundle.Activity.User.ListProductActivity.Companion.idUser
@@ -29,7 +31,11 @@ import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Order
 import com.example.testbundle.db.OrderItem
 import com.example.testbundle.db.OrderModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.UUID
 
 class OrderHistoryActivity : BaseActivity() {
@@ -38,7 +44,7 @@ class OrderHistoryActivity : BaseActivity() {
     private lateinit var prefs: DataStore<androidx.datastore.preferences.core.Preferences>
     private lateinit var orderHistoryAdapter: OrderHistoryAdapter
     private val viewModel: OrderViewModel by viewModels()
-
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOrderHistoryBinding.inflate(layoutInflater)
@@ -93,13 +99,14 @@ class OrderHistoryActivity : BaseActivity() {
      * @param email[String] password[String]
      */
     private fun loadData(email: String?, password: String?) {
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItems().asLiveData().observe(this) { list ->
+        lifecycleScope.launch {
+            val list = productApi.getUsers()
             val user = list.find { it.email == email && it.password == password }
             user?.let {
-                if (it.speciality == "Администратор" || it.speciality == "Administrator" ) {
+                if (it.speciality == "Администратор" || it.speciality == "Administrator") {
                     binding.layoutProduct.isVisible = true
                     binding.layoutUsers.isVisible = true
+
                 }
             }
         }

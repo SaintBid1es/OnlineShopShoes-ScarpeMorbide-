@@ -9,5 +9,5 @@ data class Brand(
     @PrimaryKey(autoGenerate = true)
     var id:Int? = null,
     @ColumnInfo(name = "nameBrand")
-    var name:String
+    var namebrand:String
 )

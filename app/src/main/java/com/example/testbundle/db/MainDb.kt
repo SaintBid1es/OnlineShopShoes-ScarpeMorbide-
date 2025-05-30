@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database (entities =
 [Item::class, Products::class, Basket::class, Brand::class, Category::class,
     Favorite::class, CategoryFilter::class, BrandFilter::class, Order::class,OrderItem::class,Reviews::class,ImageEntity::class
-    ], version = 21
+    ], version = 22
 )
 
 

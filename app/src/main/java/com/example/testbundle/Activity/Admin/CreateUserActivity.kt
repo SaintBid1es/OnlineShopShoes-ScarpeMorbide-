@@ -4,19 +4,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
-import com.example.testbundle.Activity.MainActivity
+import com.example.testbundle.API.ApiService
+
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityCreateUserBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class CreateUserActivity : BaseActivity() {
     lateinit var binding: ActivityCreateUserBinding
@@ -27,7 +34,7 @@ class CreateUserActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateUserBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val db = MainDb.getDb(this)
+
         /**
          *  Кнопка создания пользователя
          */
@@ -41,16 +48,17 @@ class CreateUserActivity : BaseActivity() {
             val isNumber = "[0123456789]".toRegex()
 
             /**
-            *Валидация
+             *Валидация
              * email [String] password [String]
-            */
+             */
             if (email.isEmpty()) {
                 validaciaIsEmpty(binding.etLogin)
                 return@setOnClickListener
             }
             if (!email.contains("@mail.ru") &&
                 !email.contains("@gmail.com") &&
-                !email.contains("@yandex.ru")) {
+                !email.contains("@yandex.ru")
+            ) {
                 binding.etLogin.error = getString(R.string.please_input_correct_mail)
                 return@setOnClickListener
             }
@@ -69,8 +77,8 @@ class CreateUserActivity : BaseActivity() {
                 validaciaIsEmpty(binding.etName)
                 return@setOnClickListener
             }
-            if (name.length <=1) {
-                binding.etName.error=getString(R.string.please_insert_correct_name)
+            if (name.length <= 1) {
+                binding.etName.error = getString(R.string.please_insert_correct_name)
                 return@setOnClickListener
             }
             if (surname.trim().isEmpty()) {
@@ -97,28 +105,47 @@ class CreateUserActivity : BaseActivity() {
             /**
              * Проверка на использовании почтой другим пользователями
              */
-            db.getDao().getAllItems().asLiveData().observe(this) { list ->
-                if (list?.any { it.email == email } == true) {
-                    binding.etLogin.error = getString(R.string.this_email_is_used)
-                } else {
-                    val item = Item(
-                        null,
-                        password,
-                        name,
-                        surname,
-                        email,
-                        telephone,
-                        binding.SpinnerSpecialitety.selectedItem.toString(),
-                        null
-                    )
-                    viewModel.insertItem(item)
+            lifecycleScope.launch {
+                try {
+                    val emailExists = withContext(Dispatchers.IO) {
+                        viewModel.checkEmailExists(email)
+                    }
+
+                    if (emailExists) {
+                        binding.etLogin.error = getString(R.string.this_email_is_used)
+                    } else {
+                        withContext(Dispatchers.IO) {
+                            viewModel.createUser(
+                                email,
+                                password,
+                                name,
+                                surname,
+                                telephone,
+                                binding.SpinnerSpecialitety.selectedItem.toString()
+                            )
+                        }
+
+                        Toast.makeText(
+                            this@CreateUserActivity,
+                            getString(R.string.account_success_create),
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        startActivity(
+                            Intent(
+                                this@CreateUserActivity,
+                                ListEmployeeActivity::class.java
+                            )
+                        )
+                        finish()
+                    }
+                } catch (e: Exception) {
+                    // Обработка ошибок
                     Toast.makeText(
                         this@CreateUserActivity,
-                        getString(R.string.account_success_create),
+                        "Error: ${e.message}",
                         Toast.LENGTH_SHORT
                     ).show()
-                    startActivity(Intent(this@CreateUserActivity, ListEmployeeActivity::class.java))
-                    finish()
                 }
             }
         }

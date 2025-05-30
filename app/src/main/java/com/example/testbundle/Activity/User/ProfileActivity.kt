@@ -13,6 +13,8 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences.Key
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asLiveData
@@ -20,9 +22,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.transition.Visibility
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.Admin.ListProductAdminActivity
 import com.example.testbundle.Activity.Analyst.GraphicActivity
+import com.example.testbundle.Activity.DataStoreRepo.Companion.LANGUAGE_KEY
 import com.example.testbundle.Activity.DataStoreRepo.Companion.USER_ID_KEY
 import com.example.testbundle.Activity.MainActivity
 import com.example.testbundle.Activity.User.ListProductActivity.Companion.idUser
@@ -43,6 +48,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.prefs.Preferences
 
 class ProfileActivity : BaseActivity() {
@@ -57,12 +65,12 @@ class ProfileActivity : BaseActivity() {
         val EMAIL_KEY = stringPreferencesKey("email")
         val PASSWORD_KEY = stringPreferencesKey("password")
         var idAccount = 0
-        var language = false
+        var language: Boolean=false
     }
     val MY_REQUEST_CODE1 = 100
-
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
-        val db = MainDb.getDb(this)
+
         super.onCreate(savedInstanceState)
         prefs = applicationContext.dataStore
         binding = ActivityProfileBinding.inflate(layoutInflater)
@@ -108,22 +116,25 @@ class ProfileActivity : BaseActivity() {
         binding.imgGraphic.setOnClickListener {
             startActivity(Intent(this@ProfileActivity, GraphicActivity::class.java))
         }
+        setupLanguageToggle()
 
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
-                prefs.data.collect {
-                    val userId = it[USER_ID_KEY]
-                    userId?.let { loadDataById(it) }
+                prefs.data.collect { preferences->
+                    preferences[USER_ID_KEY]?.let { loadDataById(it) }
+                    preferences[LANGUAGE_KEY]?.let { updateLocale(it) }
                 }
             }
         }
         /**
          * Смена языка
          */
-        binding.btnLanguage.setOnClickListener {
-                changeLanguage()
-        }
+//        binding.btnLanguage.setOnClickListener {
+//            CoroutineScope(Dispatchers.IO).launch {
+//                changeLanguage()
+//            }
+//        }
         binding.btnImageAddPhotoProfile.setOnClickListener {
             val intent = Intent(ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -134,15 +145,18 @@ class ProfileActivity : BaseActivity() {
         binding.btnImageResetPhotoProfile.setOnClickListener {
             binding.ivAvatarProfile.setImageResource(R.drawable.avatarmen)
             lifecycleScope.launch {
-                val user = db.getDao().getAccountById(idAccount)
+                val user =productApi.getUsersByID(idAccount)
                 val updatedUser = user.copy(avatar = null)
-                viewModelClient.updateItem(updatedUser)
+                viewModelClient.updateItem(user.id!!,updatedUser)
             }
 
         }
 
 
     }
+
+
+
     // I override system function
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -154,9 +168,9 @@ class ProfileActivity : BaseActivity() {
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
 
-                show_URI_in_ImageView(uri)//content://com.android.providers.media.documents/document/image%3A1000038190
+                show_URI_in_ImageView(uri)
                 val UpdateClient = Client.copy(avatar = uri.toString())
-                viewModelClient.updateItem(UpdateClient)
+                viewModelClient.updateItem(UpdateClient.id!!,UpdateClient)
             }
         }
     }
@@ -173,25 +187,24 @@ class ProfileActivity : BaseActivity() {
      * Загрузка данных
      */
     private fun loadDataById(userId: Int) {
-        val db = MainDb.getDb(this)
+
         lifecycleScope.launch {
-            val user = db.getDao().getAccountById(userId)
+            val user = productApi.getUsersByID(userId)
             user?.let {
                 with(binding) {
                     tvLogin.text = it.email
                     tvPassword.text = it.password
-                    tvName.text = it.Name
-                    tvSurName.text = it.SurName
+                    tvName.text = it.name
+                    tvSurName.text = it.surname
                     tvTelephone.text = it.telephone
                     tvSpeciality.text = it.speciality
                     if (!it.avatar.isNullOrEmpty()){
                         ivAvatarProfile.setImageURI(it.avatar!!.toUri())
-
                     }else {
                         ivAvatarProfile.setImageResource(R.drawable.avatarmen)
                     }
                     idAccount = it.id!!
-                    Client = Item(it.id,it.password,it.Name,it.SurName,it.email,it.telephone,it.speciality,null)
+                    Client = Item(it.id,it.password,it.name,it.surname,it.email,it.telephone,it.speciality,null)
                 }
                 if (it.speciality == "Администратор" || it.speciality == "Administrator" ) {
                     binding.layoutUsers.isVisible = true
@@ -212,9 +225,9 @@ class ProfileActivity : BaseActivity() {
      * Инициализация брэндов и категорий
      */
    suspend  fun initBrandandCategory() {
-        val db = MainDb.getDb(this)
-        val categories = db.getDao().getAllCategory().first()
-        val brands = db.getDao().getAllBrand().first()
+
+        val categories = productApi.getCategories()
+        val brands = productApi.getBrands()
         if ( brands.isEmpty()) {
                 val Brand = Brand(1, "Nike")
                 val Brand1 = Brand(2, "Puma")
@@ -234,11 +247,20 @@ class ProfileActivity : BaseActivity() {
     /**
      * Функция смена языка
      */
-    private fun changeLanguage() {
-        val languageCode = if (!language) "ru" else "en"
-        LocaleUtils.setLocale(this, languageCode)
-        language = !language
-        recreate()
+    private suspend fun updateLocale(language: Boolean) {
+        val languageCode = if (language) "ru" else "en"
+        LocaleUtils.setLocale(this@ProfileActivity, languageCode)
+    }
+    private fun setupLanguageToggle() {
+        binding.btnLanguage.setOnClickListener {
+            lifecycleScope.launch(Dispatchers.IO) {
+                prefs.edit { preferences ->
+                    val currentLanguage = preferences[LANGUAGE_KEY] ?: false
+                    preferences[LANGUAGE_KEY] = !currentLanguage
+                }
+                withContext(Dispatchers.Main) { recreate() }
+            }
+        }
     }
 
 }

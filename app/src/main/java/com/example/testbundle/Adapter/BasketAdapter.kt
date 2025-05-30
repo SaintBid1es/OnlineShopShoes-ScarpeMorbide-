@@ -71,7 +71,6 @@ class BasketAdapter {
 
                 pic.setOnClickListener {
                     Perexod(item)
-
                 }
 
                 imgBtnMin.setOnClickListener {
@@ -81,7 +80,7 @@ class BasketAdapter {
                 }
 
                 imgBtnMax.setOnClickListener {
-                    item.id?.let { it1 -> PlusCount(it1) }
+                   item.id?.let { it1 -> PlusCount(it1) }
                 }
             }
 

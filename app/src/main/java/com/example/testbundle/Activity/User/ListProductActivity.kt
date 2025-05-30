@@ -5,16 +5,17 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.Admin.*
 import com.example.testbundle.Activity.dataStore
 import com.example.testbundle.Adapter.ProductCardUserAdapter
@@ -22,13 +23,15 @@ import com.example.testbundle.FavoritePreferences
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityListProductBinding
-import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.ProductsModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ListProductActivity : BaseActivity() {
     private lateinit var binding: ActivityListProductBinding
-    private lateinit var prefs: DataStore<androidx.datastore.preferences.core.Preferences>
+    private lateinit var prefs: DataStore<Preferences>
     private lateinit var favoritePreferences: FavoritePreferences
     private lateinit var adapterBrand: ArrayAdapter<String>
     private lateinit var adapterCategory: ArrayAdapter<String>
@@ -40,6 +43,7 @@ class ListProductActivity : BaseActivity() {
         var idUser: Int = 0
     }
 
+    private val productApi = RetrofitClient.apiService
     private val viewModel: ProductViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,46 +61,46 @@ class ListProductActivity : BaseActivity() {
     private fun initViews() {
         prefs = applicationContext.dataStore
         favoritePreferences = FavoritePreferences(this)
-        binding.rcView.layoutManager = GridLayoutManager(this, 2)
 
-        adapter = ProductCardUserAdapter(
-            emptyList(),
-            onItemClick = { product ->
-                startActivity(Intent(this, DetailProductActivity::class.java).apply {
-                    putExtra("product_id", product.id)
-                })
-            },
-            onFavoriteClick = { productId ->
-                viewModel.toggleFavorite(productId)
-            }
-        )
-        binding.rcView.adapter = adapter
+        binding.rcView.apply {
+            layoutManager = GridLayoutManager(this@ListProductActivity, 2)
+            adapter = ProductCardUserAdapter(
+                emptyList(),
+                onItemClick = { product ->
+                    startActivity(Intent(this@ListProductActivity, DetailProductActivity::class.java).apply {
+                        putExtra("product_id", product.id)
+                    })
+                },
+                onFavoriteClick = { productId ->
+                    viewModel.toggleFavorite(productId)
+                }
+            )
+        }
     }
 
     private fun setupAdapters() {
-        val db = MainDb.getDb(this)
-        adapterBrand = ArrayAdapter(this, android.R.layout.simple_spinner_item)
+        adapterBrand = ArrayAdapter(this@ListProductActivity, android.R.layout.simple_spinner_item)
         adapterBrand.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        adapterCategory = ArrayAdapter(this, android.R.layout.simple_spinner_item)
+        adapterCategory = ArrayAdapter(this@ListProductActivity, android.R.layout.simple_spinner_item)
         adapterCategory.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
         binding.SpinnerBrand.adapter = adapterBrand
         binding.SpinnerCategory.adapter = adapterCategory
 
-        db.getDao().getAllCategory().asLiveData().observe(this) { categories ->
-            adapterCategory.clear()
-            adapterCategory.add(getString(R.string.all))
-            adapterCategory.addAll(categories.map { it.name })
-        }
+        lifecycleScope.launch {
+            try {
+                val categories = withContext(Dispatchers.IO) {
+                    productApi.getCategories().map { it.namecategory }
+                }
+                adapterCategory.addAll(categories)
 
-        db.getDao().getAllBrand().asLiveData().observe(this) { brands ->
-            if (brands.isNullOrEmpty()) {
-                Toast.makeText(this, getString(R.string.No_brand_data_found), Toast.LENGTH_SHORT).show()
-            } else {
-                adapterBrand.clear()
-                adapterBrand.add(getString(R.string.all))
-                adapterBrand.addAll(brands.map { it.name })
-                binding.SpinnerBrand.isEnabled = true
+                val brands = withContext(Dispatchers.IO) {
+                    productApi.getBrands().map { it.namebrand }
+                }
+                adapterBrand.addAll(brands)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Обработка ошибки загрузки данных
             }
         }
     }
@@ -104,16 +108,18 @@ class ListProductActivity : BaseActivity() {
     private fun setupObservers() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
-                prefs.data.collect { preferences ->
-                    loadUserData(
-                        preferences[ProfileActivity.EMAIL_KEY],
-                        preferences[ProfileActivity.PASSWORD_KEY]
-                    )
-                    SearchUserId(
-                        preferences[ProfileActivity.EMAIL_KEY],
-                        preferences[ProfileActivity.PASSWORD_KEY]
-                    )
-                }
+                prefs.data
+                    .catch { e -> e.printStackTrace() }
+                    .collect { preferences ->
+                        loadUserData(
+                            preferences[ProfileActivity.EMAIL_KEY],
+                            preferences[ProfileActivity.PASSWORD_KEY]
+                        )
+                        SearchUserId(
+                            preferences[ProfileActivity.EMAIL_KEY],
+                            preferences[ProfileActivity.PASSWORD_KEY]
+                        )
+                    }
             }
         }
 
@@ -129,14 +135,18 @@ class ListProductActivity : BaseActivity() {
     private fun setupListeners() {
         binding.SpinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                viewModel.setCategoryFilter(adapterCategory.getItem(position))
+                adapterCategory.getItem(position)?.let { category ->
+                    viewModel.setCategoryFilter(category)
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
 
         binding.SpinnerBrand.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                viewModel.setBrandFilter(adapterBrand.getItem(position))
+                adapterBrand.getItem(position)?.let { brand ->
+                    viewModel.setBrandFilter(brand)
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
@@ -145,9 +155,7 @@ class ListProductActivity : BaseActivity() {
             filterProducts(binding.etSearch.text.toString().trim())
         }
 
-        /**
-         * Навигационное меню
-         */
+        // Навигационное меню
         binding.imgFavorite.setOnClickListener { startActivity(Intent(this, FavoriteActivity::class.java)) }
         binding.imgBasket.setOnClickListener { startActivity(Intent(this, BasketActivity::class.java)) }
         binding.imgProfile.setOnClickListener { startActivity(Intent(this, ProfileActivity::class.java)) }
@@ -160,13 +168,10 @@ class ListProductActivity : BaseActivity() {
 
     private fun updateProductList(products: List<ProductsModel>) {
         recyclerViewState = binding.rcView.layoutManager?.onSaveInstanceState()
-        adapter.updateList(products)
+        (binding.rcView.adapter as? ProductCardUserAdapter)?.updateList(products)
         recyclerViewState?.let { binding.rcView.layoutManager?.onRestoreInstanceState(it) }
     }
 
-    /**
-     * Функция фильтраци
-     */
     private fun filterProducts(searchText: String) {
         val filteredList = if (searchText.isEmpty()) {
             viewModel.stateProduct.value
@@ -179,21 +184,36 @@ class ListProductActivity : BaseActivity() {
     }
 
     private fun loadUserData(email: String?, password: String?) {
-        MainDb.getDb(this).getDao().getAllItems().asLiveData().observe(this) { list ->
-            list.find { it.email == email && it.password == password }?.let { user ->
-                binding.tvNameAccount.text = user.Name
-                val isAdmin = user.speciality == "Администратор" || user.speciality == "Administrator"
-                binding.layoutProduct.isVisible = isAdmin
-                binding.layoutUsers.isVisible = isAdmin
-
+        lifecycleScope.launch {
+            try {
+                val list = withContext(Dispatchers.IO) {
+                    productApi.getUsers()
+                }
+                list.find { it.email == email && it.password == password }?.let { user ->
+                    binding.tvNameAccount.text = user.name
+                    val isAdmin = user.speciality == "Администратор" || user.speciality == "Administrator"
+                    binding.layoutProduct.isVisible = isAdmin
+                    binding.layoutUsers.isVisible = isAdmin
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Обработка ошибки загрузки данных пользователя
             }
         }
     }
 
     private fun SearchUserId(email: String?, password: String?) {
-        MainDb.getDb(this).getDao().getAllItems().asLiveData().observe(this) { list ->
-            list.find { it.email == email && it.password == password }?.let {
-                idUser = it.id ?: 0
+        lifecycleScope.launch {
+            try {
+                val list = withContext(Dispatchers.IO) {
+                    productApi.getUsers()
+                }
+                list.find { it.email == email && it.password == password }?.let {
+                    idUser = it.id ?: 0
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Обработка ошибки поиска ID пользователя
             }
         }
     }

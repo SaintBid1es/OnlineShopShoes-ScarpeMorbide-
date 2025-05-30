@@ -78,7 +78,7 @@ class BrandAndCategoryViewActivity : BaseActivity() {
      */
     private fun onUpdateViewBrand(entities: List<Brand>) {
         binding.apply {
-            val db = MainDb.getDb(this@BrandAndCategoryViewActivity)
+
             rcViewBrand.adapter = BrandAdapter(entities, onEdit = {
                 intent = Intent(this@BrandAndCategoryViewActivity, UpdateBrandActivity::class.java).apply {
                     putExtra("brand_id",it.id)
@@ -86,7 +86,7 @@ class BrandAndCategoryViewActivity : BaseActivity() {
                 startActivity(intent)
             },
                 onDelete = { id ->
-                    viewModelBrand?.deleteBrand(id)
+                    viewModelBrand.deleteBrand(id)
                 })
 
         }
@@ -97,7 +97,7 @@ class BrandAndCategoryViewActivity : BaseActivity() {
      */
     private fun onUpdateViewCategory(entities: List<Category>) {
         binding.apply {
-            val db = MainDb.getDb(this@BrandAndCategoryViewActivity)
+
             rcViewCategory.adapter = CategoryAdapter(entities, onEdit = {
                 intent = Intent(this@BrandAndCategoryViewActivity, UpdateCategoryActivity::class.java).apply {
                     putExtra("category_id",it.id)
@@ -105,7 +105,7 @@ class BrandAndCategoryViewActivity : BaseActivity() {
                 startActivity(intent)
             },
                 onDelete = { id ->
-                    viewModelCategory?.deleteCategory(id)
+                    viewModelCategory.deleteCategory(id)
                 })
 
         }

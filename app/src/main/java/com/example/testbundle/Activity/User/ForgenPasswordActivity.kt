@@ -17,15 +17,20 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.MainActivity
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityForgenPasswordBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
@@ -41,7 +46,7 @@ class ForgenPasswordActivity : AppCompatActivity() {
     private var check: Boolean? = null
     private var randomValues: String? = null
     lateinit var binding: ActivityForgenPasswordBinding
-
+    private val productApi = RetrofitClient.apiService
     val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,8 +82,8 @@ class ForgenPasswordActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 val user = withContext(Dispatchers.IO) {
-                    val db = MainDb.getDb(this@ForgenPasswordActivity)
-                    db.getDao().getUserByEmail(email)
+
+                    productApi.getUsersByEmail(email)
                 }
                 if (user == null) {
                     binding.etLogin.error = "getString(R.string.email_not_registered)"
@@ -221,14 +226,24 @@ class ForgenPasswordActivity : AppCompatActivity() {
     }
 
     private fun updatePasswordForEmail(email: String, password: String) {
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItems().asLiveData().observe(this) { list ->
-            val user = list.find {
-                it.email == email
+        CoroutineScope(Dispatchers.IO).launch {
+            val list = productApi.getUsers()
+                val user = list.find {
+                    it.email == email
 
-            }
-            val correctUser = Item(user!!.id,password,user.Name,user.SurName,user.email,user.telephone,user.speciality,user.avatar)
-            viewModel.updateItem(correctUser)
+                }
+                val correctUser = Item(
+                    user!!.id,
+                    password,
+                    user.name,
+                    user.surname,
+                    user.email,
+                    user.telephone,
+                    user.speciality,
+                    user.avatar
+                )
+                viewModel.updateItem(user.id!!, correctUser)
+
         }
 
     } @SuppressLint("ResourceAsColor")

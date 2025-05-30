@@ -16,6 +16,8 @@
     import androidx.core.view.WindowInsetsCompat
     import androidx.lifecycle.lifecycleScope
     import com.example.customview.extension.dpToPx
+    import com.example.testbundle.API.ApiService
+    import com.example.testbundle.API.RetrofitClient
     import com.example.testbundle.Activity.RegisterActivity
     import com.example.testbundle.Activity.User.ProfileActivity
     import com.example.testbundle.OrderViewModel
@@ -30,6 +32,8 @@
     import kotlinx.coroutines.flow.first
     import kotlinx.coroutines.launch
     import kotlinx.coroutines.withContext
+    import retrofit2.Retrofit
+    import retrofit2.converter.gson.GsonConverterFactory
     import java.util.Properties
     import javax.mail.Authenticator
     import javax.mail.Message
@@ -45,7 +49,7 @@
 
         private lateinit var binding: ActivityGraphicBinding
         private val viewModelOrder: OrderViewModel by viewModels()
-
+        private val productApi = RetrofitClient.apiService
         companion object {
             var countUsersObject: Int? = null
             var avgCheckUserObject: Int? = null
@@ -73,7 +77,7 @@
 
         override fun onStart() {
             super.onStart()
-            val db = MainDb.getDb(this)
+
 
             // Инициализация всех графиков как невидимых
             listOf(
@@ -92,36 +96,37 @@
             }
 
             lifecycleScope.launch {
-                loadAllChartsSequentially(db)
+                loadAllChartsSequentially()
             }
         }
 
-        private suspend fun loadAllChartsSequentially(db: MainDb) {
+        private suspend fun loadAllChartsSequentially() {
             // Загружаем графики последовательно с небольшими задержками
             delay(150)
-            loadChartWithAnimation(db, 1) {
-                val countUsers = db.getDao().getAllItems().first().count()
+            loadChartWithAnimation(1) {
+                val countUsers = productApi.getUsers().count()
                 countUsersObject=countUsers
                 listOf(Pair(countUsers, "Всего пользователей"))
             }
 
             delay(150)
-            loadChartWithAnimation(db, 2) {
-                val avgCheckUser = db.getDao().avgTotalPrice().toString().toInt()
+            loadChartWithAnimation( 2) {
+
+                val avgCheckUser = productApi.avgTotalPrice().toString().toInt()
                 avgCheckUserObject = avgCheckUser
                 listOf(Pair(avgCheckUser, "Средний чек пользователя"))
             }
 
             delay(150)
-            loadChartWithAnimation(db, 3) {
-                val avgRating = db.getDao().avgRating().toString().toInt()
+            loadChartWithAnimation(3) {
+                val avgRating = productApi.avgRating().toString().toInt()
                 avgRatingObject = avgRating
                 listOf(Pair(avgRating, "Средний рейтинг товаров"))
             }
 
             delay(150)
-            loadChartWithAnimation(db, 4) {
-                val summTotalPrice = db.getDao().summTotalPrice().toString().toInt()
+            loadChartWithAnimation(4) {
+                val summTotalPrice = productApi.summTotalPrice().toString().toInt()
                 summTotalPriceObject = summTotalPrice
                 binding.analyticalPieChart4.setCirclePadding(this.dpToPx(10))
 
@@ -132,8 +137,8 @@
             }
 
             delay(150)
-            loadChartWithAnimation(db, 5) {
-                val data = viewModelOrder.getProductSalesStatistics(db)
+            loadChartWithAnimation(5) {
+                val data = viewModelOrder.getProductSalesStatistics()
                 salesStatisticsObject = data
                 // Преобразуем SalesData в Pair<Int, String>
                 data.map { salesData ->
@@ -142,8 +147,8 @@
             }
 
             delay(150)
-            loadChartWithAnimation(db, 6) {
-                val combinedStats = viewModelOrder.getCombinedBrandCategoryStatsOptimized(db)
+            loadChartWithAnimation(6) {
+                val combinedStats = viewModelOrder.getCombinedBrandCategoryStatsOptimized()
                 combinedStatsObject = combinedStats
                 combinedStats.map {
                     val label = when {
@@ -157,11 +162,10 @@
             }
 
             delay(150)
-            loadRevenueCharts(db)
+            loadRevenueCharts()
         }
 
         private suspend fun loadChartWithAnimation(
-            db: MainDb,
             chartNumber: Int,
             dataProvider: suspend () -> List<Pair<Int, String>>
         ) {
@@ -194,9 +198,9 @@
             }
         }
 
-        private suspend fun loadRevenueCharts(db: MainDb) {
+        private suspend fun loadRevenueCharts() {
             try {
-                val (daily, monthly, yearly) = viewModelOrder.getRevenueStatistics(db)
+                val (daily, monthly, yearly) = viewModelOrder.getRevenueStatistics()
                 dailyObject = daily
                 monthlyObject = monthly
                 yearlyObject= yearly

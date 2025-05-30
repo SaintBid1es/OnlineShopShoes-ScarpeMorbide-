@@ -20,6 +20,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Adapter.ProductCreateAdapter
 import com.example.testbundle.ProductImage
 import com.example.testbundle.ProductViewModel
@@ -28,9 +30,12 @@ import com.example.testbundle.databinding.ActivityCreateProductBinding
 import com.example.testbundle.db.Brand
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Products
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -41,7 +46,7 @@ class CreateProductActivity : BaseActivity() {
     private lateinit var brandAdapter: ArrayAdapter<String>
     private lateinit var categoryAdapter: ArrayAdapter<String>
     private var selectedImagePosition = RecyclerView.NO_POSITION
-    private lateinit var db: MainDb
+
 
     private val imageList = mutableListOf<ProductImage>().apply {
         addAll(listOf(
@@ -67,10 +72,11 @@ class CreateProductActivity : BaseActivity() {
     ) { uri ->
         uri?.let { handleSelectedImage(it) }
     }
+    private val productApi = RetrofitClient.apiService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        db = MainDb.getDb(this)
+
         binding = ActivityCreateProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -271,9 +277,9 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
             ?: throw IllegalStateException("Category not selected")
 
         // Получаем ID бренда и категории
-        val brandId = db.getDao().getBrandByName(brandName)?.id
+        val brandId = productApi.getBrandByName(brandName)?.id
             ?: throw IllegalArgumentException("Brand '$brandName' not found")
-        val categoryId = db.getDao().getCategoryByName(categoryName)?.id
+        val categoryId = productApi.getCategoryByName(categoryName)?.id
             ?: throw IllegalArgumentException("Category '$categoryName' not found")
 
         // Проверяем, что изображение выбрано
@@ -289,11 +295,11 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
                 cost = cost,
                 description = binding.etDescription.text.toString(),
                 size = null,
-                imageId = selectedImage.resId,
-                brandId = brandId,
-                category = categoryId,
+                imageid = selectedImage.resId,
+                brandid = brandId,
+                categoryid = categoryId,
                 amount = amount,
-                imageUri = null
+                imageuri = null
             )
             is ProductImage.UriImage -> {
                 val fileName = File(selectedImage.uri.path ?: "").name
@@ -302,11 +308,11 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
                     cost = cost,
                     description = binding.etDescription.text.toString(),
                     size = null,
-                    imageId = 0,
-                    brandId = brandId,
-                    category = categoryId,
+                    imageid = 0,
+                    brandid = brandId,
+                    categoryid = categoryId,
                     amount = amount,
-                    imageUri = fileName // Сохраняем только имя файла
+                    imageuri = fileName // Сохраняем только имя файла
                 )
             }
         }
@@ -368,14 +374,31 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.categorySpinner.adapter = categoryAdapter
 
-        db.getDao().getAllBrand().asLiveData().observe(this) { brands ->
-            brandAdapter.clear()
-            brandAdapter.addAll(brands.map { it.name })
-        }
+        lifecycleScope.launch {
+            try {
+                // Загружаем бренды
+                val brands = productApi.getBrands()
+                withContext(Dispatchers.Main) {
+                    brandAdapter.clear()
+                    brandAdapter.addAll(brands.map { it.namebrand.orEmpty() })
+                }
 
-        db.getDao().getAllCategory().asLiveData().observe(this) { categories ->
-            categoryAdapter.clear()
-            categoryAdapter.addAll(categories.map { it.name })
+                // Загружаем категории
+                val categories = productApi.getCategories()
+                withContext(Dispatchers.Main) {
+                    categoryAdapter.clear()
+                    categoryAdapter.addAll(categories.map { it.namecategory.orEmpty() })
+                }
+            } catch (e: Exception) {
+                // Обработка ошибок
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@CreateProductActivity,
+                        "Ошибка загрузки данных",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 }

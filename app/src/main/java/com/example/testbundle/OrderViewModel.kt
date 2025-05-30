@@ -3,6 +3,8 @@ package com.example.testbundle
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.DataStoreRepo
 import com.example.testbundle.Activity.User.BasketActivity
 import com.example.testbundle.Repository.OrderRepository
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.UUID
 
 class OrderViewModel(
@@ -34,39 +38,55 @@ class OrderViewModel(
     val orderItems: StateFlow<List<OrderModel>> get() = _orderItems.asStateFlow()
     private val repos = OrderRepository.getInstance()
     private val repos1 = OrderItemsRepository.getInstance()
-
+    private val productApi = RetrofitClient.apiService
     /**
      *Инициализация списка
      */
     init {
+       loadOrder()
+    }
+    fun loadOrder(){
         viewModelScope.launch {
-            dataStoreRepo.dataStoreFlow.collect {
-                it[DataStoreRepo.USER_ID_KEY]?.let { userId ->
-                    repos.getOrdersByUser(userId).collect { orders ->
-                        _orderItems.update {
-                            orders.map { order ->
-                                OrderModel(
-                                    id = order.id,
-                                    orderDate = order.orderDate,
-                                    totalPrice = order.totalPrice,
-                                    products = repos1.getProductsByOrderId(order.id)
-                                        .joinToString(separator = "\n") { item ->
-                                            "${item.productName} x${item.quantity} - %s${item.price * item.quantity} (${item.size})"
-                                        }
-                                )
-                            }
+            dataStoreRepo.dataStoreFlow.collect { preferences ->
+                try {
+                    val userId = preferences[DataStoreRepo.USER_ID_KEY] ?: return@collect
+
+                    // Получаем заказы клиента
+                    val orders = productApi.getOrderByClient(userId)
+
+                    // Преобразуем каждый заказ в OrderModel
+                    val orderModels = orders.map { order ->
+                        val orderItems = try {
+                            productApi.getProductOrderItemById(order.id)
+                        } catch (e: Exception) {
+                            emptyList() // В случае ошибки используем пустой список
                         }
+
+                        OrderModel(
+                            id = order.id,
+                            orderDate = order.orderdate.orEmpty(),
+                            totalPrice = order.totalprice ?: 0.0,
+                            products = orderItems.joinToString("\n") { item ->
+                                "${item.productname.orEmpty()} x${item.quantity} - $${(item.price ?: 0.0) * item.quantity} (${item.size})"
+                            }
+                        )
                     }
+
+                    _orderItems.update { orderModels }
+
+                } catch (e: Exception) {
+                    // Обработка ошибок (можно добавить errorState)
+                    _orderItems.update { emptyList() }
                 }
             }
         }
     }
-    suspend fun getProductSalesStatistics(db: MainDb): List<SalesData> {
-        val orderItems = db.getDao().getAllOrderItem().first()
+    suspend fun getProductSalesStatistics(): List<SalesData> {
+        val orderItems = productApi.getOrderItems()
         val productSales = mutableMapOf<String, Int>()
 
         orderItems.forEach { orderItem ->
-            val productName = orderItem.productName
+            val productName = orderItem.productname
             val quantity = orderItem.quantity
             productSales[productName] = productSales.getOrDefault(productName, 0) + quantity
         }
@@ -78,15 +98,15 @@ class OrderViewModel(
     // OrderViewModel.kt
 
     // Для статистики по брендам
-    suspend fun getBrandSalesStatistics(db: MainDb): List<Pair<String, Int>> {
-        val orderItems = db.getDao().getAllOrderItem().first()
+    suspend fun getBrandSalesStatistics(): List<Pair<String, Int>> {
+        val orderItems = productApi.getOrderItems()
         val brandSales = mutableMapOf<String, Int>()  // Название бренда -> количество
 
         orderItems.forEach { orderItem ->
-            val product = db.getDao().getProductById(orderItem.productId)
-            product?.brandId?.let { brandId ->
-                val brand = db.getDao().getBrandById(brandId)  // Получаем бренд по ID
-                brand?.name?.let { brandName ->
+            val product = productApi.getProductsByID(orderItem.productid)
+            product?.brandid?.let { brandId ->
+                val brand = productApi.getBrandsByID(brandId)  // Получаем бренд по ID
+                brand?.namebrand?.let { brandName ->
                     brandSales[brandName] = brandSales.getOrDefault(brandName, 0) + orderItem.quantity
                 }
             }
@@ -95,54 +115,38 @@ class OrderViewModel(
         return brandSales.entries.map { Pair(it.key, it.value) }
     }
 
-    // Для статистики по категориям
-    suspend fun getCategorySalesStatistics(db: MainDb): List<Pair<String, Int>> {
-        val orderItems = db.getDao().getAllOrderItem().first()
-        val categorySales = mutableMapOf<String, Int>()  // Название категории -> количество
 
-        orderItems.forEach { orderItem ->
-            val product = db.getDao().getProductById(orderItem.productId)
-            product?.category?.let { categoryId ->
-                val category = db.getDao().getCategoryById(categoryId)  // Получаем категорию по ID
-                category?.name?.let { categoryName ->
-                    categorySales[categoryName] = categorySales.getOrDefault(categoryName, 0) + orderItem.quantity
-                }
-            }
-        }
-
-        return categorySales.entries.map { Pair(it.key, it.value) }
-    }
     // OrderViewModel.kt
 
-    suspend fun getCombinedBrandCategoryStatsOptimized(db: MainDb): List<Pair<String, Int>> {
+    suspend fun getCombinedBrandCategoryStatsOptimized(): List<Pair<String, Int>> {
         // Получаем все необходимые данные за один раз
-        val orderItems = db.getDao().getAllOrderItem().first()
-        val productIds = orderItems.map { it.productId }.distinct()
-        val products = db.getDao().getProductsByIds(productIds)
+        val orderItems = productApi.getOrderItems()
+        val productIds = orderItems.map { it.productid }.distinct()
+         val products = productApi.GetProductsByIds(productIds)
 
-        val brandIds = products.mapNotNull { it.brandId }.distinct()
-        val brands = db.getDao().getBrandsByIds(brandIds).associateBy { it.id }
+        val brandIds = products.mapNotNull { it.brandid }.distinct()
+        val brands = productApi.GetBrandsByIds(brandIds).associateBy { it.id }
 
-        val categoryIds = products.mapNotNull { it.category }.distinct()
-        val categories = db.getDao().getCategoriesByIds(categoryIds).associateBy { it.id }
+        val categoryIds = products.mapNotNull { it.categoryid }.distinct()
+        val categories = productApi.getCategoryByIds(categoryIds).associateBy { it.id }
 
         val stats = mutableMapOf<String, Int>()
 
         for (item in orderItems) {
-            val product = products.find { it.id == item.productId } ?: continue
+            val product = products.find { it.id == item.productid } ?: continue
             val quantity = item.quantity
 
             // Бренд
-            product.brandId?.let { brandId ->
-                brands[brandId]?.name?.let { brandName ->
+            product.brandid?.let { brandId ->
+                brands[brandId]?.namebrand?.let { brandName ->
                     val key = "Бренд: $brandName"
                     stats[key] = stats.getOrDefault(key, 0) + quantity
                 }
             }
 
             // Категория
-            product.category?.let { categoryId ->
-                categories[categoryId]?.name?.let { categoryName ->
+            product.categoryid?.let { categoryId ->
+                categories[categoryId]?.namecategory?.let { categoryName ->
                     val key = "Категория: $categoryName"
                     stats[key] = stats.getOrDefault(key, 0) + quantity
                 }
@@ -152,10 +156,10 @@ class OrderViewModel(
         return stats.toList().sortedByDescending { it.second }
     }
     // OrderViewModel.kt
-    suspend fun getRevenueStatistics(db: MainDb): Triple<Double, Double, Double> {
-        val daily = db.getDao().getDailyRevenue() ?: 0.0
-        val monthly = db.getDao().getMonthlyRevenue() ?: 0.0
-        val yearly = db.getDao().getYearlyRevenue() ?: 0.0
+    suspend fun getRevenueStatistics(): Triple<Double, Double, Double> {
+        val daily = productApi.getDailyRevenue() ?: 0.0
+        val monthly = productApi.getMonthlyRevenue() ?: 0.0
+        val yearly = productApi.getYearlyRevenue() ?: 0.0
         return Triple(daily, monthly, yearly)
     }
 
@@ -166,7 +170,7 @@ class OrderViewModel(
      */
     fun insertOrder(order: Order, onOrderInserted: (UUID?) -> Unit) {
     viewModelScope.launch {
-        val orderId = orderRepository.insertItem(order)
+        val orderId = orderRepository.insertItem(order) //NORM Product_api
         onOrderInserted(orderId)
     }
 }
@@ -176,9 +180,10 @@ class OrderViewModel(
      */
     fun deleteOrder() {
     viewModelScope.launch {
-        repos.deleteItem()
-        repos1.deleteItem()
+        productApi.deleteTableOrders()
+        productApi.deleteTableOrderItems()
     }
+        loadOrder()
 
 }
 

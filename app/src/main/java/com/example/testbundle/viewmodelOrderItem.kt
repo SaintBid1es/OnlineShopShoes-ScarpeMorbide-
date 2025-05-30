@@ -7,6 +7,8 @@ package com.example.testbundle
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Repository.BrandRepository
 import com.example.testbundle.Repository.FavoriteRepository
 import com.example.testbundle.Repository.OrderItemsRepository
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class OrderItemViewModel(
 ) : ViewModel() {
@@ -27,21 +31,33 @@ class OrderItemViewModel(
 
 
 
-
+    private val productApi = RetrofitClient.apiService
 
     fun deleteOrderItem(id: Int) {
         viewModelScope.launch {
-            repos.deleteOrderItemById(id)
+            productApi.deleteOrderItems(id)
+            loadOrderItems()
         }
     }
-    fun updateOrderItem(item: OrderItem) {
+    fun updateOrderItem(id:Int,item: OrderItem) {
         viewModelScope.launch {
-            repos.updateItem(item)
+            productApi.updateOrderItems(id,item)
+            loadOrderItems()
         }
     }
     fun insertOrderItem(item: OrderItem){
         viewModelScope.launch {
-            repos.insertItem(item)
+            productApi.insertOrderItems(item)
+            loadOrderItems()
+        }
+    }
+    fun loadOrderItems(){
+        viewModelScope.launch {
+            repos.getItems().collect { list ->
+                _stateOrderItem.update {
+                    list
+                }
+            }
         }
     }
 
@@ -53,13 +69,7 @@ class OrderItemViewModel(
         get() = _stateOrderItem.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            repos.getItems().collect { list ->
-                _stateOrderItem.update {
-                    list
-                }
-            }
-        }
+        loadOrderItems()
     }
 
 }

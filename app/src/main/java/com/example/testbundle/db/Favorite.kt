@@ -23,7 +23,7 @@ data class Favorite(
     @PrimaryKey
     var id: Int? = null,
     @ColumnInfo(name = "client_id")
-    var client_id: Int,
+    var clientId: Int,
     @ColumnInfo(name = "product_id")
-    var product_id: Int
+    var productId: Int
 )

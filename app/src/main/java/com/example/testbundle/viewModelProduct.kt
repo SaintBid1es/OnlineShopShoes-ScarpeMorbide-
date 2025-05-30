@@ -2,6 +2,8 @@ package com.example.testbundle
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.DataStoreRepo
 import com.example.testbundle.Repository.BrandRepository
 import com.example.testbundle.Repository.CategoryRepository
@@ -16,10 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class ProductViewModel : ViewModel() {
 
-
+    private val productApi = RetrofitClient.apiService
     private val productRepo = ProductRepository.getInstance()
     private val favoriteRepo = FavoriteRepository.getInstance()
     private val brandRepo = BrandRepository.getInstance()
@@ -41,19 +45,19 @@ class ProductViewModel : ViewModel() {
     private fun loadProducts() {
         viewModelScope.launch {
             authRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
-                val products = productRepo.getProducts()
+                val products = productApi.getProducts()
                 val filteredProducts = applyFilters(products)
                 _stateProduct.update {
                     filteredProducts.map { product ->
-                        val isInFavorite = favoriteRepo.getIsInFavorite(userID, product.id ?: 0) > 0
+                        val isInFavorite = productApi.getIsInFavorite(userID, product.id ?: 0) > 0
                         ProductsModel(
                             id = product.id,
                             name = product.name,
                             description = product.description,
                             cost = product.cost,
-                            imageId = product.imageId,
+                            imageId = product.imageid,
                             isFavorite = isInFavorite,
-                            product.imageUri
+                            product.imageuri
                         )
                     }
                 }
@@ -65,9 +69,9 @@ class ProductViewModel : ViewModel() {
     private fun applyFilters(products: List<Products>): List<Products> {
         return products.filter { product ->
             val matchesCategory =
-                _selectedCategory.value == null || product.category == _selectedCategory.value
+                _selectedCategory.value == null || product.categoryid == _selectedCategory.value
             val matchesBrand =
-                _selectedBrand.value == null || product.brandId == _selectedBrand.value
+                _selectedBrand.value == null || product.brandid == _selectedBrand.value
             matchesCategory && matchesBrand
         }
     }
@@ -77,7 +81,7 @@ class ProductViewModel : ViewModel() {
         viewModelScope.launch {
             _selectedCategory.update {
                 categoryName?.let {
-                    categoryRepo.getCategoryByName(categoryName)?.id
+                    productApi.getCategoryByName(categoryName)?.id
                 }
             }
             loadProducts()
@@ -91,7 +95,7 @@ class ProductViewModel : ViewModel() {
         viewModelScope.launch {
             _selectedBrand.update {
                 brandName?.let {
-                    brandRepo.getBrandByName(brandName)?.id
+                   productApi.getBrandByName(brandName)?.id
                 }
             }
             loadProducts()
@@ -101,21 +105,21 @@ class ProductViewModel : ViewModel() {
 
     fun insertProduct(product: Products) {
         viewModelScope.launch {
-            productRepo.insertProduct(product)
+            productApi.insertProducts(product)
         }
     }
 
 
-    fun updateProduct(product: Products) {
+    fun updateProduct(id:Int,product: Products) {
         viewModelScope.launch {
-            productRepo.updateProduct(product)
+            productApi.updateProducts(id,product)
         }
     }
 
 
     fun deleteProduct(productId: Int) {
         viewModelScope.launch {
-            productRepo.deleteProduct(productId)
+            productApi.deleteProducts(productId)
         }.invokeOnCompletion {
             loadProducts()
         }
@@ -125,14 +129,14 @@ class ProductViewModel : ViewModel() {
     fun toggleFavorite(productId: Int) {
         viewModelScope.launch {
             authRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
-                val isInFavorite = favoriteRepo.getIsInFavorite(userID, productId) > 0
+                val isInFavorite = productApi.getIsInFavorite(userID, productId) > 0
                 if (isInFavorite) {
-                    favoriteRepo.deleteClientItemByProduct(userID, productId)
+                    productApi.deleteFavoriteByIdClientAndProduct(userID, productId)
                 } else {
-                    favoriteRepo.insertFavorite(
+                    productApi.insertFavorites(
                         Favorite(
-                            client_id = userID,
-                            product_id = productId
+                            clientId = userID,
+                            productId = productId
                         )
                     )
                 }

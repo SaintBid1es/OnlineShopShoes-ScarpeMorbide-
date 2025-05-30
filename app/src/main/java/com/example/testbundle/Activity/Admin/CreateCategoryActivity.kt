@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.asLiveData
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
 import com.example.testbundle.Activity.User.ListProductActivity
 import com.example.testbundle.CategoryViewModel
 import com.example.testbundle.ProductViewModel
@@ -17,6 +18,11 @@ import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityCreateCategoryBinding
 import com.example.testbundle.db.Category
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class CreateCategoryActivity : BaseActivity() {
     lateinit var binding:ActivityCreateCategoryBinding
@@ -26,7 +32,7 @@ class CreateCategoryActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateCategoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val db = MainDb.getDb(this)
+
         /**
          * Реализация создания категорий
          */
@@ -43,29 +49,26 @@ class CreateCategoryActivity : BaseActivity() {
                 Toast.makeText(this, R.string.input_type_formar_text, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            db.getDao().getAllCategory().asLiveData().observe(this) { categories ->
-                // Проверяем, есть ли категория с таким именем
-                val categoryExists = categories.any { it.name == name }
-
-                if (categoryExists) {
-                    binding.etNameCategory.error = getString(R.string.category_this_used)
-                } else {
-                    // Если категории нет, создаем её
-                    val newCategory = Category(
-                        null,
-                        name
-                    )
-                    viewModel.insertCategory(newCategory)
-
-                    startActivity(
-                        Intent(
-                            this@CreateCategoryActivity,
-                            BrandAndCategoryViewActivity::class.java
+            if (name.isNotEmpty()) {
+                viewModel.checkAndInsertCategory(
+                    name = name,
+                    onExists = {
+                        // Вызывается в UI потоке автоматически (ViewModelScope использует Dispatchers.Main)
+                        binding.etNameCategory.error = getString(R.string.category_this_used)
+                    },
+                    onSuccess = { category ->
+                        // Переход на другую активити
+                        startActivity(
+                            Intent(
+                                this@CreateCategoryActivity,
+                                BrandAndCategoryViewActivity::class.java
+                            )
                         )
-                    )
-                    finish() // Рекомендуется закрыть текущую активити
-                }
+                        finish()
+                    }
+                )
+            } else {
+                binding.etNameCategory.error = getString(R.string.category_this_used)
             }
         }
         /**

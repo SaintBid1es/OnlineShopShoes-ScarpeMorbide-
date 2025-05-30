@@ -1,6 +1,7 @@
 package com.example.testbundle.Activity
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -20,6 +21,7 @@ public class DataStoreRepo private constructor(
     companion object{
 
         val USER_ID_KEY = intPreferencesKey("userID")
+        val LANGUAGE_KEY = booleanPreferencesKey("language")
         private var instance : DataStoreRepo? = null
 
         fun createInstance(context : Context){

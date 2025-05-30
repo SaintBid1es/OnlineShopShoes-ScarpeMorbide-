@@ -13,23 +13,23 @@ import androidx.room.PrimaryKey
     [ForeignKey(
         entity = Item::class,
         parentColumns = arrayOf("id"),
-        childColumns = arrayOf("client_id"),
+        childColumns = arrayOf("clientId"),
         onDelete = ForeignKey.CASCADE
     ), ForeignKey(
         entity = Products::class,
         parentColumns = arrayOf("id"),
-        childColumns = arrayOf("product_id"),
+        childColumns = arrayOf("productId"),
         onDelete = ForeignKey.CASCADE
     )])
 data class Basket(
     @PrimaryKey(autoGenerate = true)
     var id: Int? = null,
     @ColumnInfo
-    var client_id: Int,
+    var clientId: Int,
     @ColumnInfo
-    var product_id: Int,
+    var productId: Int,
     @ColumnInfo(name = "countBasket")
-    var count: Int,
+    var countbasket: Int,
     @ColumnInfo(name = "size")
     var size: Int,
 

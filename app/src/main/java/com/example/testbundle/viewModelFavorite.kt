@@ -3,6 +3,8 @@ package com.example.testbundle
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.DataStoreRepo
 import com.example.testbundle.Repository.FavoriteRepository
 import com.example.testbundle.Repository.ProductRepository
@@ -12,23 +14,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class FavoriteViewModel(
 ) : ViewModel() {
 
-
-
-
+    private val productApi = RetrofitClient.apiService
     fun changeISInFavorite(productID: Int) {
         viewModelScope.launch {
             dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
-                val isInFavorite = if (repos.getIsInFavorite(userID, productID) > 0) {
-                    repos.deleteClientItemByProduct(userID, productID)
+                val isInFavorite = if (productApi.getIsInFavorite(userID, productID) > 0) {
+                   repos.deleteClientItemByProduct(userID, productID)
                     false
                 } else {
-                    repos.insertFavorite(Favorite(client_id = userID, product_id = productID))
+                    productApi.insertFavorites(Favorite(clientId = userID, productId = productID))
                     true
                 }
 
@@ -52,26 +55,29 @@ class FavoriteViewModel(
 
     init {
         viewModelScope.launch {
-            dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
-                repos.getItemsByUser(userID).collect { list ->
-                    _state.update {
-                        list.mapNotNull {
-                            productsRepo.getProductById(it.product_id)?.let { product ->
-                                val isInFavorite = repos.getIsInFavorite(userID, product.id ?: -1)
-                                ProductsModel(
-                                    product.id ?: -1,
-                                    product.name,
-                                    product.description,
-                                    product.cost,
-                                    product.imageId,
-                                    isInFavorite > 0,
-                                    product.imageUri
+            dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userId ->
+                // Получаем данные один раз
+                val baskets = productApi.getItemsByUser(userId)
 
-                                )
-                            }
+                // Преобразуем в Flow
+                flow {
+                    emit(baskets.mapNotNull { basket ->
+                        productApi.getProductsByID(basket.productId)?.let { product ->
+                            val isFavorite = productApi.getIsInFavorite(userId, product.id ?: -1)
+                            ProductsModel(
+                                product.id ?: -1,
+                                product.name,
+                                product.description,
+                                product.cost,
+                                product.imageid,
+                                isFavorite > 0,
+                                product.imageuri
+
+                            )
                         }
-                    }
-
+                    })
+                }.collect { products ->
+                    _state.update { products }
                 }
             }
         }

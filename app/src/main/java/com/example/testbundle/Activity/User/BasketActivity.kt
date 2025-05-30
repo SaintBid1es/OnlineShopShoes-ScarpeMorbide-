@@ -34,6 +34,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.Admin.ListProductAdminActivity
 import com.example.testbundle.Activity.DataStoreRepo
@@ -51,7 +53,11 @@ import com.example.testbundle.db.Order
 import com.example.testbundle.db.OrderItem
 import com.example.testbundle.db.Products
 import com.example.testbundle.db.ProductsModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -80,7 +86,7 @@ class BasketActivity : BaseActivity() {
     private val REQUEST_CODE_POST_NOTIFICATIONS = 1
     val CHANNEL_ID = "confirmOrder"
 
-
+    private val productApi = RetrofitClient.apiService
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityBasketBinding.inflate(layoutInflater)
@@ -163,15 +169,17 @@ class BasketActivity : BaseActivity() {
      * Функция проверки роли
      */
     private fun CheckRole(email: String?, password: String?) {
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItems().asLiveData().observe(this) { list ->
-            val user = list.find { it.email == email && it.password == password }
-            user?.let {
-                if (it.speciality == "Администратор" || it.speciality == "Administrator") {
-                    binding.layoutUsers.isVisible = true
-                    binding.layoutProduct.isVisible = true
-                }
-                EMAIL = it.email
+       lifecycleScope.launch {
+            val list = productApi.getUsers()
+                val user = list.find { it.email == email && it.password == password }
+                user?.let {
+                    if (it.speciality == "Администратор" || it.speciality == "Administrator") {
+                        binding.layoutUsers.isVisible = true
+                        binding.layoutProduct.isVisible = true
+                    }
+                    EMAIL = it.email
+
+
             }
         }
     }
@@ -194,9 +202,9 @@ class BasketActivity : BaseActivity() {
                     }
                 startActivity(intent)
             }, PlusCount = { id ->
-                viewModel.increaseQuantity(id)
+                    viewModel.increaseQuantity(id)
             }, MinusCount = { id ->
-                viewModel.decreaseQuantity(id)
+                    viewModel.decreaseQuantity(id)
             })
             rcViewBasket.adapter = adapter
             rcViewBasket.layoutManager = GridLayoutManager(this@BasketActivity, 2)
@@ -311,9 +319,9 @@ class BasketActivity : BaseActivity() {
                             SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                         val totalPrice = entities.sumOf { it.cost * it.count }
                         val order = Order(
-                            client_id = userId,
-                            orderDate = orderDate,
-                            totalPrice = totalPrice
+                            clientId = userId,
+                            orderdate = orderDate,
+                            totalprice = totalPrice
                         )
 
                         viewModelOrder.insertOrder(order) { orderId ->
@@ -324,9 +332,9 @@ class BasketActivity : BaseActivity() {
 
                             entities.forEach { record ->
                                 val orderItem = OrderItem(
-                                    orderId = orderId,
-                                    productId = record.id ?: -1,
-                                    productName = record.name,
+                                    orderid = orderId,
+                                    productid = record.id ?: -1,
+                                    productname = record.name,
                                     quantity = record.count,
                                     price = record.cost,
                                     size = record.size + 6
@@ -347,7 +355,7 @@ class BasketActivity : BaseActivity() {
                                     product.amount-1,
                                     product.imageUri
                                 )
-                                viewModelProducts.updateProduct(products)
+                                viewModelProducts.updateProduct(products.id!!,products)
                             }
                             val productsText = entities.joinToString("\n") { item ->
                                 "Товар: ${item.name}, Размер: ${item.size + 6}, Кол-во: ${item.count}, Цена: ${item.cost}"
@@ -475,8 +483,6 @@ class BasketActivity : BaseActivity() {
 
 
     fun sendNotification(title: String, description: String) {
-
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = title
             val descriptionText = description

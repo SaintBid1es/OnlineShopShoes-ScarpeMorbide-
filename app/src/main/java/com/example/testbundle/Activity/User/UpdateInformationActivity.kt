@@ -20,6 +20,8 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.DataStoreRepo
 import com.example.testbundle.Activity.User.ListProductActivity.Companion.idUser
@@ -30,7 +32,11 @@ import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityUpdateInformationBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
@@ -49,12 +55,14 @@ class UpdateInformationActivity : BaseActivity() {
     private var randomValues:String?=null
     lateinit var prefs: DataStore<androidx.datastore.preferences.core.Preferences>
     private var currentUserId:Int?=-1
-
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityUpdateInformationBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        val db = MainDb.getDb(this)
+
+
+
         prefs = applicationContext.dataStore
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
@@ -67,10 +75,10 @@ class UpdateInformationActivity : BaseActivity() {
          * Выводит информацию пользователя
          */
         lifecycleScope.launch {
-            val account = db.getDao().getAccountById(idAccount)
-            binding.etName.setText(account.Name)
+            val account = productApi.getUsersByID(idAccount)
+            binding.etName.setText(account.name)
             binding.etLogin.setText(account.email)
-            binding.etSurName.setText(account.SurName)
+            binding.etSurName.setText(account.surname)
             binding.etPassword.setText(account.password)
             binding.etTelephone.setText(account.telephone)
             binding.tvSpecialitetyVivod.setText(account.speciality)
@@ -93,46 +101,51 @@ class UpdateInformationActivity : BaseActivity() {
                 return@setOnClickListener
             }
             var validaciaTrue = false
-            db.getDao().getAllItems().asLiveData().observe(this) { list ->
-                var isEmailUsedByOthers = false
-                list.forEach { user ->
-                    with(binding) {
-                        if (email.isNullOrEmpty()) {
-                            validaciaIsEmpty(etLogin)
-                        } else if (!email.contains("@mail.ru") && !email.contains("@gmail.com") && !email.contains("@yandex.ru")) {
-                            etLogin.error = getString(R.string.please_input_correct_mail)
-                            validaciaTrue = false
-                        } else if (user.email == email && user.id != currentUserId) {
-                            etLogin.error =
-                                getString(R.string.this_email_is_used_by_another_account)
-                            isEmailUsedByOthers = true
-                            validaciaTrue = false
-                        }
-                        else if(email.length>254 || email.length<8){
-                            etLogin.error = getString(R.string.please_input_correct_mail)
-                            validaciaTrue = false
-                        }else if (name.trim().isEmpty()) {
-                            validaciaIsEmpty(etName)
-                        }  else if(name.length<=1){
-                            etName.error = getString(R.string.please_insert_correct_name)
-                            validaciaTrue = false
-                        }else if (telephone.trim().isEmpty()) {
-                            validaciaIsEmpty(etTelephone)
-                        } else if (!telephone.startsWith("+")) {
-                            etTelephone.error = getString(R.string.please_start_with)
-                        } else if (telephone.length < 6 || telephone.length > 15) {
-                            etTelephone.error = getString(R.string.telephone_must_be_6_to_15_character)
-                            validaciaTrue = false
-                        } else {
-                            validaciaTrue = true
-                        }
-                    }
-                }
+            lifecycleScope.launch {
+          val list = productApi.getUsers()
+              var isEmailUsedByOthers = false
+              list.forEach { user ->
+                  with(binding) {
+                      if (email.isNullOrEmpty()) {
+                          validaciaIsEmpty(etLogin)
+                      } else if (!email.contains("@mail.ru") && !email.contains("@gmail.com") && !email.contains(
+                              "@yandex.ru"
+                          )
+                      ) {
+                          etLogin.error = getString(R.string.please_input_correct_mail)
+                          validaciaTrue = false
+                      } else if (user.email == email && user.id != currentUserId) {
+                          etLogin.error =
+                              getString(R.string.this_email_is_used_by_another_account)
+                          isEmailUsedByOthers = true
+                          validaciaTrue = false
+                      } else if (email.length > 254 || email.length < 8) {
+                          etLogin.error = getString(R.string.please_input_correct_mail)
+                          validaciaTrue = false
+                      } else if (name.trim().isEmpty()) {
+                          validaciaIsEmpty(etName)
+                      } else if (name.length <= 1) {
+                          etName.error = getString(R.string.please_insert_correct_name)
+                          validaciaTrue = false
+                      } else if (telephone.trim().isEmpty()) {
+                          validaciaIsEmpty(etTelephone)
+                      } else if (!telephone.startsWith("+")) {
+                          etTelephone.error = getString(R.string.please_start_with)
+                      } else if (telephone.length < 6 || telephone.length > 15) {
+                          etTelephone.error =
+                              getString(R.string.telephone_must_be_6_to_15_character)
+                          validaciaTrue = false
+                      } else {
+                          validaciaTrue = true
+                      }
+                  }
+              }
+
 
 
                 if (validaciaTrue && !isEmailUsedByOthers) {
                     lifecycleScope.launch {
-                        val account = db.getDao().getAccountById(idAccount)
+                        val account = productApi.getUsersByID(idAccount)
 
 
                         val pass = binding.etPassword.text.toString()
@@ -143,20 +156,31 @@ class UpdateInformationActivity : BaseActivity() {
                         val speciality = binding.tvSpecialitetyVivod.text.toString()
 
                         val updatedUser =
-                            Item(idAccount, pass, name, surname, email, telephone, speciality,account.avatar)
+                            Item(
+                                idAccount,
+                                pass,
+                                name,
+                                surname,
+                                email,
+                                telephone,
+                                speciality,
+                                account.avatar
+                            )
 
 
-                        viewModel.updateItem(updatedUser)
+                        viewModel.updateItem(updatedUser.id!!, updatedUser)
                         prefs.edit { preferences ->
                             preferences[ProfileActivity.EMAIL_KEY] = email
                             preferences[ProfileActivity.PASSWORD_KEY] = pass
                             preferences[DataStoreRepo.USER_ID_KEY] = idAccount
                         }
-                        val intent = Intent(this@UpdateInformationActivity, ProfileActivity::class.java)
+                        val intent =
+                            Intent(this@UpdateInformationActivity, ProfileActivity::class.java)
                         startActivity(intent)
                     }
-
                 }
+
+
             }
         }
         binding.newPassword.setOnClickListener {
@@ -195,8 +219,8 @@ class UpdateInformationActivity : BaseActivity() {
         val customdialog = dialog.create()
 
         lifecycleScope.launch {
-            val db = MainDb.getDb(this@UpdateInformationActivity)
-            val currentUser = db.getDao().getAccountById(currentUserId ?: -1)
+
+            val currentUser = productApi.getUsersByID(currentUserId ?: -1)
 
             btnConfirm.setOnClickListener {
                 val oldPassword = etOldPassword.text?.toString() ?: ""
@@ -218,7 +242,7 @@ class UpdateInformationActivity : BaseActivity() {
                     else -> {
                         val updatedUser = currentUser.copy(password = confirmPassword)
                         lifecycleScope.launch {
-                            viewModel.updateItem(updatedUser)
+                            viewModel.updateItem(updatedUser.id!!,updatedUser)
                             prefs.edit { preferences ->
                                 preferences[ProfileActivity.PASSWORD_KEY] = confirmPassword
                             }

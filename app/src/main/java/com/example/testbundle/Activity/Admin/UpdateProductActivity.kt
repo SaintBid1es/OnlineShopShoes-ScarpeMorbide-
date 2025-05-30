@@ -35,6 +35,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import androidx.core.net.toUri
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class UpdateProductActivity : BaseActivity() {
     private lateinit var binding: ActivityUpdateProductBinding
@@ -42,8 +47,8 @@ class UpdateProductActivity : BaseActivity() {
     private lateinit var brandAdapter: ArrayAdapter<String>
     private lateinit var categoryAdapter: ArrayAdapter<String>
     private var selectedImagePosition = RecyclerView.NO_POSITION
-    private lateinit var db: MainDb
 
+    private val productApi = RetrofitClient.apiService
     private val imageList = mutableListOf<ProductImage>().apply {
         addAll(listOf(
             R.drawable.shoes1, R.drawable.shoes2, R.drawable.shoes3, R.drawable.shoes4,
@@ -64,7 +69,7 @@ class UpdateProductActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        db = MainDb.getDb(this)
+
         binding = ActivityUpdateProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -264,15 +269,16 @@ class UpdateProductActivity : BaseActivity() {
         categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item)
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.categorySpinner.adapter = categoryAdapter
+        lifecycleScope.launch {
+           val brands =  productApi.getBrands()
+                brandAdapter.clear()
+                brandAdapter.addAll(brands.map { it.namebrand })
 
-        db.getDao().getAllBrand().asLiveData().observe(this) { brands ->
-            brandAdapter.clear()
-            brandAdapter.addAll(brands.map { it.name })
-        }
 
-        db.getDao().getAllCategory().asLiveData().observe(this) { categories ->
-            categoryAdapter.clear()
-            categoryAdapter.addAll(categories.map { it.name })
+            val categories= productApi.getCategories()
+                categoryAdapter.clear()
+                categoryAdapter.addAll(categories.map { it.namecategory })
+
         }
     }
 
@@ -283,10 +289,7 @@ class UpdateProductActivity : BaseActivity() {
     private fun loadProductData(productId: Int) {
         lifecycleScope.launch {
             try {
-                val product = db.getDao().getProductById(productId) ?: run {
-                    showErrorAndFinish(R.string.product_not_found)
-                    return@launch
-                }
+                val product = productApi.getProductsByID(productId)
 
                 with(binding) {
                     etNameProduct.setText(product.name)
@@ -299,7 +302,7 @@ class UpdateProductActivity : BaseActivity() {
                 loadProductImage(product)
 
                 // Установка выбранных значений в спиннерах
-                setSpinnerSelections(product.brandId, product.category)
+                setSpinnerSelections(product.brandid, product.categoryid)
             } catch (e: Exception) {
                 Log.e("UpdateProduct", "Error loading product", e)
                 Toast.makeText(this@UpdateProductActivity,
@@ -310,7 +313,7 @@ class UpdateProductActivity : BaseActivity() {
 
     private suspend fun loadProductImage(product: Products) {
         // Если есть URI изображения
-        product.imageUri?.takeIf { it.isNotEmpty() }?.let { fileName ->
+        product.imageuri?.takeIf { it.isNotEmpty() }?.let { fileName ->
             try {
                 val imagesDir = File(filesDir, "product_images")
                 val imageFile = File(imagesDir, fileName)
@@ -330,7 +333,7 @@ class UpdateProductActivity : BaseActivity() {
                     selectedImagePosition = imageList.size - 1
                     // Удаляем несуществующую ссылку из базы данных
                     lifecycleScope.launch {
-                        db.getDao().updateProductImage(product.id!!, 0, null)
+                      productApi.updateProductImage(product.id!!, 0, null,product)
                     }
                 }
             } catch (e: Exception) {
@@ -340,8 +343,8 @@ class UpdateProductActivity : BaseActivity() {
             }
         } ?: run {
             // Если есть ID ресурса
-            if (product.imageId != 0) {
-                updateSelectedImage(product.imageId)
+            if (product.imageid != 0) {
+                updateSelectedImage(product.imageid)
             } else {
                 // Если нет изображения, добавляем placeholder
                 imageList.add(ProductImage.DrawableImage(R.drawable.star_ic))
@@ -367,12 +370,12 @@ class UpdateProductActivity : BaseActivity() {
 
     private fun setSpinnerSelections(brandId: Int, categoryId: Int) {
         lifecycleScope.launch {
-            db.getDao().getBrandById(brandId)?.name?.let { brandName ->
+            productApi.getBrandsByID(brandId)?.namebrand?.let { brandName ->
                 val position = brandAdapter.getPosition(brandName)
                 if (position >= 0) binding.brandSpinner.setSelection(position)
             }
 
-            db.getDao().getCategoryById(categoryId)?.name?.let { categoryName ->
+            productApi.getCategoriesByID(categoryId)?.namecategory?.let { categoryName ->
                 val position = categoryAdapter.getPosition(categoryName)
                 if (position >= 0) binding.categorySpinner.setSelection(position)
             }
@@ -386,7 +389,7 @@ class UpdateProductActivity : BaseActivity() {
             lifecycleScope.launch {
                 try {
                     val updatedProduct = createUpdatedProduct(productId)
-                    viewModel.updateProduct(updatedProduct)
+                    viewModel.updateProduct(updatedProduct.id!!,updatedProduct)
                     showSuccessAndFinish(R.string.product_updated)
                 } catch (e: Exception) {
                     showError(R.string.error, e.message)
@@ -417,9 +420,9 @@ class UpdateProductActivity : BaseActivity() {
         val categoryName = binding.categorySpinner.selectedItem?.toString()
             ?: throw IllegalStateException("Category not selected")
 
-        val brandId = db.getDao().getBrandByName(brandName)?.id
+        val brandId = productApi.getBrandByName(brandName)?.id
             ?: throw IllegalArgumentException("Brand '$brandName' not found")
-        val categoryId = db.getDao().getCategoryByName(categoryName)?.id
+        val categoryId = productApi.getCategoryByName(categoryName)?.id
             ?: throw IllegalArgumentException("Category '$categoryName' not found")
 
         if (selectedImagePosition == RecyclerView.NO_POSITION) {
@@ -434,11 +437,11 @@ class UpdateProductActivity : BaseActivity() {
                 cost = cost,
                 description = binding.etDescription.text.toString(),
                 size = null,
-                imageId = selectedImage.resId,
-                brandId = brandId,
-                category = categoryId,
+                imageid = selectedImage.resId,
+                brandid = brandId,
+                categoryid = categoryId,
                 amount = amount,
-                imageUri = null
+                imageuri = null
             )
             is ProductImage.UriImage -> {
                 val fileName = File(selectedImage.uri.path ?: "").name
@@ -448,11 +451,11 @@ class UpdateProductActivity : BaseActivity() {
                     cost = cost,
                     description = binding.etDescription.text.toString(),
                     size = null,
-                    imageId = 0,
-                    brandId = brandId,
-                    category = categoryId,
+                    imageid = 0,
+                    brandid = brandId,
+                    categoryid = categoryId,
                     amount = amount,
-                    imageUri = fileName
+                    imageuri = fileName
                 )
             }
         }

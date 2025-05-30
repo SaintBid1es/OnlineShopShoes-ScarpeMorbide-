@@ -3,32 +3,66 @@ package com.example.testbundle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Repository.ItemsRepository
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainViewModel(
 ) : ViewModel() {
+
+    private val productApi = RetrofitClient.apiService
+
     /**
      * Функция удаления пользователя по идентификатору
      */
     fun deleteItem(id: Int) {
         viewModelScope.launch {
-            repo.deleteItem(id)
+            productApi.deleteUser(id)
+            loadUsers()
         }
+    }
+    suspend fun checkEmailExists(email: String): Boolean {
+        return productApi.getUsers().any { it.email == email }
+    }
+
+    suspend fun createUser(
+        email: String,
+        password: String,
+        name: String,
+        surname: String,
+        telephone: String,
+        specialty: String
+    ) {
+        val item = Item(
+            null,
+            password,
+            name,
+            surname,
+            email,
+            telephone,
+            specialty,
+            null
+        )
+        productApi.insertUser(item)
     }
 
     /**
      * Функция обновления пользователя
      */
-    fun updateItem(item: Item) {
+    fun updateItem(id:Int,item: Item) {
         viewModelScope.launch {
-            repo.updateItem(item)
+            productApi.updateUser(id,item)
+            loadUsers()
         }
     }
 
@@ -37,12 +71,21 @@ class MainViewModel(
      */
     fun insertItem(item: Item){
         viewModelScope.launch {
-            repo.insertItem(item)
+            productApi.insertUser(item)
+            loadUsers()
         }
+
     }
 
 
-
+    fun loadUsers(){
+        viewModelScope.launch {
+            val users = productApi.getUsers()
+            _state.update {
+                users
+            }
+        }
+    }
 
     private val repo = ItemsRepository.getInstance()
 
@@ -54,13 +97,7 @@ class MainViewModel(
      * Инициализация списка
      */
     init {
-        viewModelScope.launch {
-            repo.getItems().collect { list ->
-                _state.update {
-                    list
-                }
-            }
-        }
+       loadUsers()
     }
 
 }

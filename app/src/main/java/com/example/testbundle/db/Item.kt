@@ -12,9 +12,9 @@ data class Item (
     @ColumnInfo(name = "password")
     var password:String,
     @ColumnInfo(name = "name")
-    var Name:String,
+    var name:String,
     @ColumnInfo(name = "surname")
-    var SurName:String,
+    var surname:String,
     @ColumnInfo(name = "email")
     var email:String,
     @ColumnInfo(name = "telephone")

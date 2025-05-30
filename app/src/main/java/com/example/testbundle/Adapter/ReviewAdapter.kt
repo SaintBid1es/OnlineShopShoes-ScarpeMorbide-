@@ -29,10 +29,10 @@ class ReviewAdapter(
          var uri: Uri? = null
         val binding = ReviewItemBinding.bind(item)
         fun bind(item: Reviews) = with(binding) {
-            val clientName = clientNames[item.client_id] ?: "Unknown Client"
-            val clientAvatar = clientAvatar[item.client_id]
+            val clientName = clientNames[item.clientId] ?: "Unknown Client"
+            val clientAvatar = clientAvatar[item.clientId]
             tvClientName.text = clientName
-            tvTextReview.text = "${item.heading}\n ${item.description}\n ${item.rating}\n ${item.Reviewdate}"
+            tvTextReview.text = "${item.heading}\n ${item.description}\n ${item.rating}\n ${item.reviewdate}"
             if (clientAvatar!="null".toUri()) {
                 ivAvatar.setImageURI(clientAvatar)
             }else{
@@ -40,7 +40,7 @@ class ReviewAdapter(
             }
 
 
-            if (clientID!=item.client_id){
+            if (clientID!=item.clientId){
                 btnDeleteCard.isVisible = false
                 btnUpdateCard.isVisible = false
             }

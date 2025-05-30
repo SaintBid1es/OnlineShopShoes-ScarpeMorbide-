@@ -15,15 +15,28 @@ import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
+
+
+import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.User.ForgenPasswordActivity
 import com.example.testbundle.Activity.User.ProfileActivity
 import com.example.testbundle.LocaleUtils
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityMainBinding
+import com.example.testbundle.db.Brand
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
@@ -40,19 +53,24 @@ class MainActivity : BaseActivity() {
     private val binding
         get() = _binding ?: throw IllegalStateException("Binding null")
 
+    lateinit var prefs: DataStore<Preferences>
 
-    lateinit var prefs : DataStore<Preferences>
     companion object {
         val INITIALIZED_KEY = booleanPreferencesKey("is_initialized")
     }
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
-        val db = MainDb.getDb(this)
+
+
         super.onCreate(savedInstanceState)
         val savedLanguage = LocaleUtils.getSavedLanguage(this)
         LocaleUtils.setLocale(this, savedLanguage)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         prefs = applicationContext.dataStore
+
+
+
 
         /**
          * Переход на окно с регистрацией
@@ -71,7 +89,7 @@ class MainActivity : BaseActivity() {
         lifecycleScope.launch {
             val isInitialized = prefs.data.first()[INITIALIZED_KEY] ?: false
             if (!isInitialized) {
-                init(MainDb.getDb(this@MainActivity))
+                init()
             }
         }
         /**
@@ -82,16 +100,20 @@ class MainActivity : BaseActivity() {
             val password = binding.etPassword.text?.toString()?.trim()
 
             if (email.isNullOrEmpty() || password.isNullOrEmpty()) {
-                Toast.makeText(this@MainActivity,
-                    getString(R.string.email_and_password_cannot_be_empty), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@MainActivity,
+                    getString(R.string.email_and_password_cannot_be_empty), Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
-
-            db.getDao().getAllItems().asLiveData().observe(this) { userList ->
+            lifecycleScope.launch {
+            val userList = productApi.getUsers()
                 val user = userList.find { it.email == email && it.password == password }
                 if (user == null) {
-                    Toast.makeText(this@MainActivity,
-                        getString(R.string.incorrect_email_or_password), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.incorrect_email_or_password), Toast.LENGTH_SHORT
+                    ).show()
                 } else {
                     lifecycleScope.launch {
                         prefs.edit {
@@ -103,6 +125,7 @@ class MainActivity : BaseActivity() {
                     val intent = Intent(this@MainActivity, ProfileActivity::class.java)
                     startActivity(intent)
                 }
+
             }
         }
 
@@ -110,14 +133,17 @@ class MainActivity : BaseActivity() {
 //            changeLanguage()
 //        }
         binding.forgotPasswordLink.setOnClickListener {
-               startActivity(Intent(this@MainActivity,ForgenPasswordActivity::class.java))
+            startActivity(Intent(this@MainActivity, ForgenPasswordActivity::class.java))
         }
     }
+
+
+
 
     /**
      * Инициализация данных для входа администратора
      */
-    suspend fun init(db: MainDb) {
+    suspend fun init() {
 
         val isInitialized = prefs.data.first()[INITIALIZED_KEY] ?: false
         if (isInitialized) return
@@ -133,7 +159,7 @@ class MainActivity : BaseActivity() {
             null
         )
 
-        db.getDao().insertItem(item)
+        productApi.insertUser(item)
 
         prefs.edit { preferences ->
             preferences[INITIALIZED_KEY] = true

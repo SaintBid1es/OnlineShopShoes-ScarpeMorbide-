@@ -10,21 +10,21 @@ import java.util.UUID
     foreignKeys = [ForeignKey(
         entity = Order::class,
         parentColumns = ["id"],
-        childColumns = ["orderId"],
+        childColumns = ["orderid"],
         onDelete = ForeignKey.CASCADE
     ),ForeignKey(
         entity = Products::class,
         parentColumns = ["id"],
-        childColumns = ["productId"],
+        childColumns = ["productid"],
         onDelete = ForeignKey.CASCADE
     )]
 )
 data class OrderItem(
     @PrimaryKey(autoGenerate = true)
     var id: Int? = null,
-    var orderId: UUID,
-    var productId: Int,
-    var productName: String,
+    var orderid: UUID,
+    var productid: Int,
+    var productname: String,
     var quantity: Int,
     var price: Double,
     var size:Int

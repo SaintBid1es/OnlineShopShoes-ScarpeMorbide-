@@ -28,11 +28,11 @@ data class Reviews(
     @ColumnInfo(name = "description")
     var description:String,
     @ColumnInfo(name = "reviewDate")
-    var Reviewdate:String,
+    var reviewdate:String,
     @ColumnInfo(name = "rating")
     var rating: Double,
     @ColumnInfo(name = "client_id")
-    var client_id: Int,
+    var clientId: Int,
     @ColumnInfo(name = "product_id")
-    var product_id: Int
+    var productId: Int
 )

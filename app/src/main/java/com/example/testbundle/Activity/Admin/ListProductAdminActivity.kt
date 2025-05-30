@@ -81,7 +81,7 @@ class ListProductAdminActivity : BaseActivity() {
      */
     private fun onUpdateView(entities: List<ProductsModel>) {
         binding.apply {
-            val db = MainDb.getDb(this@ListProductAdminActivity)
+
             rcView.adapter = ProductCardAdapter(entities, onEdit = {
                 intent = Intent(this@ListProductAdminActivity, UpdateProductActivity::class.java).apply {
                     putExtra("product_id",it.id)

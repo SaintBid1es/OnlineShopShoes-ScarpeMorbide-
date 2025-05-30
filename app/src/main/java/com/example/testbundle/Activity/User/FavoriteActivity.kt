@@ -18,6 +18,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.Admin.EditAccountCardActivity
 import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.Admin.ListProductAdminActivity
@@ -37,12 +39,17 @@ import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Products
 import com.example.testbundle.db.ProductsModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class FavoriteActivity : BaseActivity() {
     lateinit var binding:ActivityFavoriteBinding
     lateinit var prefs : DataStore<androidx.datastore.preferences.core.Preferences>
     val viewModel : FavoriteViewModel by viewModels()
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityFavoriteBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
@@ -96,15 +103,16 @@ class FavoriteActivity : BaseActivity() {
      * Функция проверка роли пользователя
      */
     private fun CheckRole(email: String?, password: String?) {
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItems().asLiveData().observe(this) { list ->
-            val user = list.find { it.email == email && it.password == password }
-            user?.let {
-                if (it.speciality == "Администратор" || it.speciality == "Administrator" ) {
-                    binding.layoutUsers.isVisible = true
-                    binding.layoutProduct.isVisible = true
-                }
-            }
+        lifecycleScope.launch {
+       val list =productApi.getUsers()
+           val user = list.find { it.email == email && it.password == password }
+           user?.let {
+               if (it.speciality == "Администратор" || it.speciality == "Administrator") {
+                   binding.layoutUsers.isVisible = true
+                   binding.layoutProduct.isVisible = true
+
+           }
+       }
         }
     }
 

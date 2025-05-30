@@ -11,6 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.asLiveData
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
 import com.example.testbundle.Activity.User.DetailProductActivity
 import com.example.testbundle.Activity.User.DetailProductActivity.Companion.idUser
 import com.example.testbundle.Activity.User.ListProductActivity
@@ -21,6 +22,8 @@ import com.example.testbundle.databinding.ActivityCreateReviewBinding
 import com.example.testbundle.db.Category
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Reviews
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,7 +36,7 @@ class CreateReviewActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateReviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val db = MainDb.getDb(this)
+
         /**
          * Реализация создания категорий
          */
@@ -43,7 +46,7 @@ class CreateReviewActivity : BaseActivity() {
             val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val rating = binding.spinnerRating.selectedItemPosition.toDouble()+1
             val product_id = intent.getIntExtra("product_id",-1)
-            val review = Reviews(null,header,description,date,rating, client_id = idUser,product_id)
+            val review = Reviews(null,header,description,date,rating, clientId = idUser,product_id)
 
             viewModel.insertReviews(review)
             Toast.makeText(this@CreateReviewActivity,

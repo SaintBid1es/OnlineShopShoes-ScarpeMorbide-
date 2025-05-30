@@ -9,14 +9,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityEditAccountCardBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class EditAccountCardActivity : BaseActivity() {
 
@@ -24,23 +29,25 @@ class EditAccountCardActivity : BaseActivity() {
     lateinit var binding: ActivityEditAccountCardBinding
     val viewModel : MainViewModel by viewModels<MainViewModel>()
      var avatar: String?=""
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
-        val db = MainDb.getDb(this)
+
         super.onCreate(savedInstanceState)
         binding = ActivityEditAccountCardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         val id = intent.getIntExtra("item_id",0)
+
         /**
         Вывод информации пользователя
          */
         lifecycleScope.launch {
-            val account = db.getDao().getAccountById(id)
+            val account = productApi.getUsersByID(id)
             account?.let {
                 withContext(Dispatchers.Main) {
-                    binding.etName.setText(it.Name)
+                    binding.etName.setText(it.name)
                     binding.etLogin.setText(it.email)
-                    binding.etSurName.setText(it.SurName)
+                    binding.etSurName.setText(it.surname)
                     binding.etPassword.setText(it.password)
                     binding.etTelephone.setText(it.telephone)
                     avatar = it.avatar
@@ -76,7 +83,8 @@ class EditAccountCardActivity : BaseActivity() {
             }
             if (!email.contains("@mail.ru") &&
                 !email.contains("@gmail.com") &&
-                !email.contains("@yandex.ru")) {
+                !email.contains("@yandex.ru")
+            ) {
                 binding.etLogin.error = getString(R.string.please_input_correct_mail)
                 return@setOnClickListener
             }
@@ -95,7 +103,7 @@ class EditAccountCardActivity : BaseActivity() {
                 validaciaIsEmpty(binding.etName)
                 return@setOnClickListener
             }
-            if(name.length<=1){
+            if (name.length <= 1) {
                 binding.etName.error = getString(R.string.please_insert_correct_name)
                 return@setOnClickListener
             }
@@ -123,21 +131,45 @@ class EditAccountCardActivity : BaseActivity() {
             /**
              * Проверка на использовании почтой другим пользователями
              */
-            db.getDao().getAllItems().asLiveData().observe(this) { list ->
-                val isEmailUsed = list?.any { it.email == email && it.id != id } == true
-                if (isEmailUsed) {
-                    binding.etLogin.error = getString(R.string.this_email_is_used)
-                } else {
+            lifecycleScope.launch {
+                try {
+                    val emailExists = withContext(Dispatchers.IO) {
+                        viewModel.checkEmailExists(email)
+                    }
 
-                    val updatedUser = Item(id, password, name, surname, email, telephone, specifer,avatar)
-                    viewModel.updateItem(updatedUser)
+                    if (emailExists) {
+                        binding.etLogin.error = getString(R.string.this_email_is_used)
+                    } else {
+                        withContext(Dispatchers.IO) {
+                            val account = productApi.getUsersByID(id)
+                            val user = Item(id,password,name,surname,email,telephone,binding.SpinnerSpecialitety.selectedItem.toString(),account.avatar)
+                            viewModel.updateItem(
+                                id,
+                               user
+                            )
+                        }
+
+                        Toast.makeText(
+                            this@EditAccountCardActivity,
+                            getString(R.string.account_success_create),
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        startActivity(
+                            Intent(
+                                this@EditAccountCardActivity,
+                                ListEmployeeActivity::class.java
+                            )
+                        )
+                        finish()
+                    }
+                } catch (e: Exception) {
+                    // Обработка ошибок
                     Toast.makeText(
                         this@EditAccountCardActivity,
-                        getString(R.string.account_updated_successfully),
+                        "Error: ${e.message}",
                         Toast.LENGTH_SHORT
                     ).show()
-                    startActivity(Intent(this@EditAccountCardActivity, ListEmployeeActivity::class.java))
-                    finish()
                 }
             }
         }

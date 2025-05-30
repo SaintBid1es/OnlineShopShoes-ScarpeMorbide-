@@ -56,6 +56,7 @@ interface Dao {
     suspend fun updateBrand(item: Brand)
     @Query("SELECT * FROM brand WHERE id = :id_brand")
     suspend fun getBrandById(id_brand: Int?):Brand?
+
     @Query("SELECT nameBrand FROM brand WHERE id = :brandId")
     suspend fun getBrandNameById(brandId: Int): String?
 
@@ -84,25 +85,33 @@ interface Dao {
 
     @Insert
     suspend fun insertBasket(item: Basket)
-    @Query("SELECT Count(*) FROM basket where product_id =:productId and size=:sizeId and client_id=:clientID")
+
+
+    @Query("SELECT Count(*) FROM basket where productId =:productId and size=:sizeId and clientId=:clientID")
     suspend fun getBasketItemByProductAndSize(sizeId: Int, productId: Int,clientID:Int): Int?
+
+
     @Query("SELECT * FROM basket")
     fun getAllBasket(): Flow<List<Basket>>
-    @Query("SELECT * FROM basket where client_id = :clientID")
+
+    @Query("SELECT * FROM basket where clientId = :clientID")
     fun getAllBasketByClient(clientID : Int): Flow<List<Basket>>
+
     @Query("DELETE FROM basket WHERE id = :id_basket")
     suspend fun deleteBasketById(id_basket: Int?)
-    @Query("DELETE FROM basket WHERE product_id = :productID and client_id = :clientID and size =:sizeID")
+
+    @Query("DELETE FROM basket WHERE productId = :productID and clientId = :clientID and size =:sizeID")
     suspend fun deleteBasketById(productID: Int, clientID: Int,sizeID: Int)
+
     @Query("DELETE FROM basket ")
     suspend fun deleteBasket()
     @Update
     suspend fun updateBasket(item: Basket)
     @Query("SELECT * FROM basket WHERE id = :id_basket")
     suspend fun getBasketById(id_basket: Int?):Basket
-    @Query("SELECT Count(*) FROM basket WHERE product_id = :productId and client_id = :userId")
+    @Query("SELECT Count(*) FROM basket WHERE productId = :productId and clientId = :userId")
      suspend fun isProductInBasket(productId: Int, userId: Int) : Int?
-    @Query("SELECT * FROM basket WHERE client_id = :userId AND product_id = :productId LIMIT 1")
+    @Query("SELECT * FROM basket WHERE clientId = :userId AND productId = :productId LIMIT 1")
     suspend fun getBasketItemByProduct(userId: Int, productId: Int): Basket?
 
 
@@ -131,8 +140,12 @@ interface Dao {
     suspend fun insertOrder(item: Order)
     @Query("SELECT * FROM `order`")
     fun getAllOrder(): Flow<List<Order>>
+
+
     @Query("SELECT * FROM `order` where client_id = :clientID")
     fun getAllOrderByClient(clientID : Int): Flow<List<Order>>
+
+
     @Query("DELETE FROM `order` WHERE id = :id_order")
     suspend fun deleteOrderById(id_order: Int?)
     @Query("DELETE FROM `order` ")
@@ -141,8 +154,10 @@ interface Dao {
     suspend fun updateOrder(item: Order)
     @Query("SELECT * FROM `order` WHERE id = :id_order")
     suspend fun getOrderById(id_order: Int?):Order
+
     @Query("SELECT SUM(totalPrice) FROM `order`")
     suspend fun summTotalPrice(): Int
+
     @Query("SELECT SUM(totalPrice) / COUNT(*) FROM `order`")
     suspend fun avgTotalPrice(): Int
 
@@ -151,6 +166,8 @@ interface Dao {
 
     @Query("SELECT * FROM order_items where orderId = :id ")
     suspend fun getProductOrderItemById(id:UUID):List<OrderItem>
+
+
     @Insert
     suspend fun insertOrderItem(item: OrderItem)
     @Query("SELECT * FROM order_items")
@@ -184,6 +201,7 @@ interface Dao {
 
     @Update
     suspend fun updateRewiews(item: Reviews)
+
     @Query("SELECT SUM(rating) / COUNT(*) FROM reviews")
     suspend fun avgRating() : Int
 

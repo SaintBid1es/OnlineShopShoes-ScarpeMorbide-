@@ -31,14 +31,14 @@ data class Products(
     @ColumnInfo(name = "size")
     var size :Int?,
     @ColumnInfo(name = "imageId")
-    var imageId:Int,
+    var imageid:Int,
     @ColumnInfo(name = "brandId")
-    var brandId:Int,
+    var brandid:Int,
     @ColumnInfo(name = "categoryId")
-    var category:Int,
+    var categoryid:Int,
     @ColumnInfo(name = "amount")
     var amount:Int,
-    val imageUri: String?, // Для URI
+    val imageuri: String?, // Для URI
 
 )
 data class ProductsModel(

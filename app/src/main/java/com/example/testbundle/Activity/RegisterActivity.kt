@@ -22,12 +22,18 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityRegisterBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
@@ -44,14 +50,13 @@ class RegisterActivity : BaseActivity() {
     private var check:Boolean? = null
     private var randomValues:String?=null
 
-
+    private val productApi = RetrofitClient.apiService
     val viewModel: MainViewModel by viewModels()
     private lateinit var binding: ActivityRegisterBinding
     private val REQUEST_CODE_POST_NOTIFICATIONS = 1
     val CHANNEL_ID = "RegisterAccount"
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        val db = MainDb.getDb(this)
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -144,7 +149,8 @@ class RegisterActivity : BaseActivity() {
 
 
             }
-            db.getDao().getAllItems().asLiveData().observe(this) { list ->
+            CoroutineScope(Dispatchers.IO).launch {
+            val list = productApi.getUsers()
                 if (list?.any { it.email == email } == true) {
                     binding.etLogin.error = getString(R.string.this_email_is_used)
                 } else {
@@ -159,10 +165,14 @@ class RegisterActivity : BaseActivity() {
                         null
                     )
                     viewModel.insertItem(item)
-                    sendNotification(getString(R.string.registerAccount),getString(R.string.SuccesregisterAccount))
+                    sendNotification(
+                        getString(R.string.registerAccount),
+                        getString(R.string.SuccesregisterAccount)
+                    )
                     startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
                     finish()
                 }
+
             }
         }
 
@@ -224,7 +234,7 @@ class RegisterActivity : BaseActivity() {
     /**
      * Функция инициализации администратора
      */
-    fun init(db: MainDb) {
+    fun init() {
         val item = Item(
             null,
             "Passwords",
@@ -236,7 +246,7 @@ class RegisterActivity : BaseActivity() {
             null
         )
         lifecycleScope.launch {
-            db.getDao().insertItem(item)
+            productApi.insertUser(item)
         }
     }
 

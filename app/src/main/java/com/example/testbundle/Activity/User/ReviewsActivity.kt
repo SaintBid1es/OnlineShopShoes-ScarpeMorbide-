@@ -10,6 +10,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.testbundle.API.ApiService
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.User.ProfileActivity.Companion.idAccount
 import com.example.testbundle.Adapter.ReviewAdapter
 import com.example.testbundle.MainViewModel
@@ -19,12 +21,14 @@ import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Reviews
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class ReviewsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReviewsBinding
     private val viewModel: ReviewViewModel by viewModels()
-    val viewModelClients : MainViewModel by viewModels()
-    lateinit var getAllUserList: List<Item>
+
+    private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReviewsBinding.inflate(layoutInflater)
@@ -68,16 +72,16 @@ class ReviewsActivity : AppCompatActivity() {
     }
 
     private fun onUpdateView(entities: List<Reviews>) {
-        val db = MainDb.getDb(this)
+
 
         // Запускаем корутину для работы с Flow
         lifecycleScope.launch {
             // Получаем список клиентов из Flow
-            val clients = db.getDao().getAllItems().first() // first() получает первый эмит из Flow
+            val clients = productApi.getUsers() // first() получает первый эмит из Flow
 
 
             // Создаем маппинг ID -> имя клиента
-            val clientNames = clients.associate { it.id to it.Name }
+            val clientNames = clients.associate { it.id to it.name }
             var userAvatar = clients.associate { it.id to it.avatar.toString().toUri() }
 
             // Инициализируем адаптер с передачей clientNames

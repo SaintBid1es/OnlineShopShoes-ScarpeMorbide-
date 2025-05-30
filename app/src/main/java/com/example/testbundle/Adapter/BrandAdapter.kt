@@ -27,7 +27,7 @@ class BrandAdapter (
 
             tvInfBrand.text = itemView.context.getString(
                 R.string.brand_info_format,
-                itemView.context.getString(R.string.brand_name), item.name
+                itemView.context.getString(R.string.brand_name), item.namebrand
             )
 
             btnDeleteCard.setOnClickListener {
