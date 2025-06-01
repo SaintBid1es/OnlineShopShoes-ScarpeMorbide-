@@ -1,5 +1,12 @@
 package com.example.testbundle.API
 
+//import com.example.testbundle.Repository.LoginRequest
+//import com.example.testbundle.Repository.LoginResponse
+import com.example.testbundle.Repository.LoginRequest
+import com.example.testbundle.Repository.LoginResponse
+import com.example.testbundle.Repository.RefreshTokenRequest
+import com.example.testbundle.Repository.RefreshTokenResponse
+
 import com.example.testbundle.db.Basket
 import com.example.testbundle.db.Brand
 import com.example.testbundle.db.BrandFilter
@@ -12,23 +19,30 @@ import com.example.testbundle.db.Order
 import com.example.testbundle.db.OrderItem
 import com.example.testbundle.db.Products
 import com.example.testbundle.db.Reviews
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.UUID
 
 interface ApiService {
     // USERS
+//    @GET("Users")
+//    suspend fun getUsers(): List<Item>
+//
     @GET("Users")
-    suspend fun getUsers(): List<Item>
+    suspend fun getUsers(@Header("Authorization") token: String): List<Item>
 
     @GET("Users/{id}")
-    suspend fun getUsersByID(@Path("id") id: Int): Item
+    suspend fun getUsersByID(@Path("id") id: Int,@Header("Authorization") token: String): Item
 
     @GET("Users/GetUserByEmail/{email}")
     suspend fun getUsersByEmail(@Path("email") email: String): Item?
@@ -36,11 +50,25 @@ interface ApiService {
     @POST("Users")
     suspend fun insertUser(@Body user: Item): Item
 
+    @POST("Users/login")
+    suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
+
+    @POST("Users/refresh-token")
+    suspend fun refreshToken(
+        @Body request: RefreshTokenRequest
+    ): Response<RefreshTokenResponse>
+
     @PUT("Users/{id}")
     suspend fun updateUser(@Path("id") id: Int, @Body user: Item): Response<Unit>
 
     @DELETE("Users/{id}")
     suspend fun deleteUser(@Path("id") id: Int): Response<Unit>
+
+    //IMAGE
+    @Multipart
+    @POST("image/upload")
+    suspend fun uploadImage(@Part file: MultipartBody.Part): Response<ImageUploadResponse>
+    data class ImageUploadResponse(val url: String)
 
     // BASKETS
     @GET("Baskets")
@@ -71,7 +99,7 @@ interface ApiService {
     suspend fun deleteTableBaskets(): Response<Unit>
 
     @DELETE("Baskets/{product_id}/{clientID}/{sizeID}")
-    suspend fun deleteClientItemByProduct(@Path("product_id") product_id: Int,@Path("clientID") clientID: Int,@Path("sizeID") sizeID: Int)
+    suspend fun deleteClientItemByProductBasket(@Path("product_id") product_id: Int,@Path("clientID") clientID: Int,@Path("sizeID") sizeID: Int)
 
     // BRANDFILTERS
     @GET("Brandfilters")
@@ -305,8 +333,8 @@ interface ApiService {
     @GET("Favorites")
     suspend fun getFavorites(): List<Favorite>
 
-    @GET("Favorites/{id}")
-    suspend fun getFavoritesByID(@Path("id") id: Int): Favorite
+    @GET("Favorites/getFavoriteByClient/{clientId}")
+    suspend fun getFavoritesByID(@Path("clientId") clientId: Int): List<Favorite>
 
     @GET("Favorites/getIsInFavorite/{userId}/{productId}")
     suspend fun getIsInFavorite(@Path("userId") userId: Int,@Path("productId") productID: Int): Int
@@ -319,6 +347,9 @@ interface ApiService {
 
     @DELETE("Favorites/{id}")
     suspend fun deleteFavorites(@Path("id") id: Int): Response<Unit>
+
+    @DELETE("Favorites/deleteClientItemByProductFavorite/{clientId}/productId")
+    suspend fun deleteClientItemByProductFavorite(@Path("clientId") userId: Int,@Path("productId") productID: Int): Response<Unit>
 
     @DELETE("Favorites/deleteFavoriteByIdClientAndProduct/{productId}/{clientId}")
     suspend fun deleteFavoriteByIdClientAndProduct(@Path("productId") productId: Int,@Path("clientId") clientID: Int): Response<Unit>

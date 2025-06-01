@@ -46,6 +46,7 @@ import com.example.testbundle.OrderItemViewModel
 import com.example.testbundle.OrderViewModel
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityBasketBinding
 import com.example.testbundle.db.BasketModel
 import com.example.testbundle.db.MainDb
@@ -53,6 +54,7 @@ import com.example.testbundle.db.Order
 import com.example.testbundle.db.OrderItem
 import com.example.testbundle.db.Products
 import com.example.testbundle.db.ProductsModel
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,7 +84,7 @@ class BasketActivity : BaseActivity() {
     private val viewModelOrder: OrderViewModel by viewModels()
     private val viewModelOrderItem: OrderItemViewModel by viewModels()
     private var recyclerViewState: Parcelable? = null
-
+    private lateinit var authRepository: AuthRepository
     private val REQUEST_CODE_POST_NOTIFICATIONS = 1
     val CHANNEL_ID = "confirmOrder"
 
@@ -95,7 +97,7 @@ class BasketActivity : BaseActivity() {
         prefs = applicationContext.dataStore
         binding.rcViewBasket.layoutManager = LinearLayoutManager(this)
         restoreRecyclerState(savedInstanceState)
-
+        authRepository = AuthRepository(applicationContext)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(
@@ -170,7 +172,8 @@ class BasketActivity : BaseActivity() {
      */
     private fun CheckRole(email: String?, password: String?) {
        lifecycleScope.launch {
-            val list = productApi.getUsers()
+           withAuthToken { token->
+            val list = productApi.getUsers(token)
                 val user = list.find { it.email == email && it.password == password }
                 user?.let {
                     if (it.speciality == "Администратор" || it.speciality == "Administrator") {
@@ -178,7 +181,7 @@ class BasketActivity : BaseActivity() {
                         binding.layoutProduct.isVisible = true
                     }
                     EMAIL = it.email
-
+                }
 
             }
         }

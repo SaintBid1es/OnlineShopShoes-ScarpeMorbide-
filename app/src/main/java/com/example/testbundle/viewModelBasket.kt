@@ -74,7 +74,7 @@ class BasketViewModel(
         viewModelScope.launch {
             dataStoreRepo.dataStoreFlow.collect {
                 it[DataStoreRepo.USER_ID_KEY]?.let {
-                    productApi.deleteClientItemByProduct(it, productID,sizeID)
+                    productApi.deleteClientItemByProductBasket(it, productID,sizeID)
                 }
             }
         }

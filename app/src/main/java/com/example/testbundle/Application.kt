@@ -2,6 +2,7 @@ package com.example.testbundle
 
 import android.app.Application
 import com.example.testbundle.Activity.DataStoreRepo
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.Repository.BasketRepository
 import com.example.testbundle.Repository.BrandRepository
 import com.example.testbundle.Repository.CategoryRepository
@@ -27,5 +28,6 @@ class Application : Application() {
         CategoryRepository.createInstance(applicationContext)
         DataStoreRepo.createInstance(applicationContext)
         ReviewsRepository.createInstance(applicationContext)
+
     }
 }

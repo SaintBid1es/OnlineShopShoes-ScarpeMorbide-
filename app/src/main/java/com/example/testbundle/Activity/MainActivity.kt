@@ -12,6 +12,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
@@ -24,10 +25,12 @@ import com.example.testbundle.Activity.User.ForgenPasswordActivity
 import com.example.testbundle.Activity.User.ProfileActivity
 import com.example.testbundle.LocaleUtils
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityMainBinding
 import com.example.testbundle.db.Brand
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -54,7 +57,7 @@ class MainActivity : BaseActivity() {
         get() = _binding ?: throw IllegalStateException("Binding null")
 
     lateinit var prefs: DataStore<Preferences>
-
+    private lateinit var authRepository: AuthRepository
     companion object {
         val INITIALIZED_KEY = booleanPreferencesKey("is_initialized")
     }
@@ -69,7 +72,7 @@ class MainActivity : BaseActivity() {
         setContentView(binding.root)
         prefs = applicationContext.dataStore
 
-
+        authRepository = AuthRepository(applicationContext)
 
 
         /**
@@ -107,27 +110,49 @@ class MainActivity : BaseActivity() {
                 return@setOnClickListener
             }
             lifecycleScope.launch {
-            val userList = productApi.getUsers()
-                val user = userList.find { it.email == email && it.password == password }
-                if (user == null) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        getString(R.string.incorrect_email_or_password), Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    lifecycleScope.launch {
-                        prefs.edit {
-                            it[ProfileActivity.EMAIL_KEY] = email
-                            it[ProfileActivity.PASSWORD_KEY] = password
-                            it[DataStoreRepo.USER_ID_KEY] = user.id ?: -1
-                        }
-                    }
-                    val intent = Intent(this@MainActivity, ProfileActivity::class.java)
-                    startActivity(intent)
-                }
 
+                    try {
+                        when (val result = authRepository.login(email, password)) {
+
+                            is com.example.testbundle.Repository.Result.Error -> {
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    result.message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            is com.example.testbundle.Repository.Result.Success<*> -> {
+                                withAuthToken { token ->
+                                    val userList = productApi.getUsers(token)
+                                    val user = userList.find { it.email == email && it.password == password }
+                                lifecycleScope.launch {
+                                    prefs.edit {
+                                        it[ProfileActivity.EMAIL_KEY] = email
+                                        it[ProfileActivity.PASSWORD_KEY] = password
+                                        it[DataStoreRepo.USER_ID_KEY] = user!!.id ?: -1
+                                    }
+                                }
+                                }
+                                startActivity(
+                                    Intent(
+                                        this@MainActivity,
+                                        ProfileActivity::class.java
+                                    )
+                                )
+                                finish()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Network error: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
-        }
+
 
 //        binding.btnLanguage.setOnClickListener {
 //            changeLanguage()

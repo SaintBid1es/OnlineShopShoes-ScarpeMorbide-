@@ -26,11 +26,13 @@ import com.example.testbundle.Activity.User.ListProductActivity.Companion.idUser
 import com.example.testbundle.Activity.dataStore
 import com.example.testbundle.OrderViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityOrderHistoryBinding
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Order
 import com.example.testbundle.db.OrderItem
 import com.example.testbundle.db.OrderModel
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,6 +47,7 @@ class OrderHistoryActivity : BaseActivity() {
     private lateinit var orderHistoryAdapter: OrderHistoryAdapter
     private val viewModel: OrderViewModel by viewModels()
     private val productApi = RetrofitClient.apiService
+    private lateinit var authRepository: AuthRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOrderHistoryBinding.inflate(layoutInflater)
@@ -57,7 +60,7 @@ class OrderHistoryActivity : BaseActivity() {
         orderHistoryAdapter = OrderHistoryAdapter(emptyList())
         recyclerView.adapter = orderHistoryAdapter
 
-
+        authRepository = AuthRepository(applicationContext)
 
         setupClickListeners()
         /**
@@ -100,15 +103,17 @@ class OrderHistoryActivity : BaseActivity() {
      */
     private fun loadData(email: String?, password: String?) {
         lifecycleScope.launch {
-            val list = productApi.getUsers()
-            val user = list.find { it.email == email && it.password == password }
-            user?.let {
-                if (it.speciality == "Администратор" || it.speciality == "Administrator") {
-                    binding.layoutProduct.isVisible = true
-                    binding.layoutUsers.isVisible = true
+           withAuthToken { token ->
+               val list = productApi.getUsers( token)
+               val user = list.find { it.email == email && it.password == password }
+               user?.let {
+                   if (it.speciality == "Администратор" || it.speciality == "Administrator") {
+                       binding.layoutProduct.isVisible = true
+                       binding.layoutUsers.isVisible = true
 
-                }
-            }
+                   }
+               }
+           }
         }
     }
 

@@ -15,10 +15,12 @@ import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.User.ProfileActivity.Companion.idAccount
 import com.example.testbundle.Adapter.ReviewAdapter
 import com.example.testbundle.MainViewModel
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityReviewsBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Reviews
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
@@ -27,14 +29,14 @@ import retrofit2.converter.gson.GsonConverterFactory
 class ReviewsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReviewsBinding
     private val viewModel: ReviewViewModel by viewModels()
-
+    private lateinit var authRepository: AuthRepository
     private val productApi = RetrofitClient.apiService
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReviewsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
+        authRepository = AuthRepository(applicationContext)
         binding.rcViewReview.apply {
             layoutManager = LinearLayoutManager(this@ReviewsActivity)
             setHasFixedSize(true)
@@ -76,27 +78,32 @@ class ReviewsActivity : AppCompatActivity() {
 
         // Запускаем корутину для работы с Flow
         lifecycleScope.launch {
-            // Получаем список клиентов из Flow
-            val clients = productApi.getUsers() // first() получает первый эмит из Flow
+            withAuthToken { token ->
+                val clients = productApi.getUsers(token) // first() получает первый эмит из Flow
 
 
-            // Создаем маппинг ID -> имя клиента
-            val clientNames = clients.associate { it.id to it.name }
-            var userAvatar = clients.associate { it.id to it.avatar.toString().toUri() }
+                // Создаем маппинг ID -> имя клиента
+                val clientNames = clients.associate { it.id to it.name }
+                var userAvatar = clients.associate { it.id to it.avatar.toString().toUri() }
 
-            // Инициализируем адаптер с передачей clientNames
-            binding.rcViewReview.adapter = ReviewAdapter(
-                clientID = idAccount,
-                entities = entities,
-                clientAvatar =  userAvatar,
-                clientNames = clientNames, // Передаем маппинг имен
-                onDelete = { id -> viewModel.deleteReview(id) },
-                onEdit = { review ->
-                    startActivity(Intent(this@ReviewsActivity, UpdateReviewActivity::class.java).apply {
-                        putExtra("review_id", review.id)
-                    })
-                }
-            )
+                // Инициализируем адаптер с передачей clientNames
+                binding.rcViewReview.adapter = ReviewAdapter(
+                    clientID = idAccount,
+                    entities = entities,
+                    clientAvatar = userAvatar,
+                    clientNames = clientNames, // Передаем маппинг имен
+                    onDelete = { id -> viewModel.deleteReview(id) },
+                    onEdit = { review ->
+                        startActivity(
+                            Intent(
+                                this@ReviewsActivity,
+                                UpdateReviewActivity::class.java
+                            ).apply {
+                                putExtra("review_id", review.id)
+                            })
+                    }
+                )
+            }
         }
     }
 }

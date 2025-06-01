@@ -5,6 +5,8 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
+
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.Repository.ItemsRepository
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
@@ -21,6 +23,7 @@ class MainViewModel(
 ) : ViewModel() {
 
     private val productApi = RetrofitClient.apiService
+    private lateinit var authRepository: AuthRepository
 
     /**
      * Функция удаления пользователя по идентификатору
@@ -32,7 +35,8 @@ class MainViewModel(
         }
     }
     suspend fun checkEmailExists(email: String): Boolean {
-        return productApi.getUsers().any { it.email == email }
+        val token = authRepository.getRefreshToken()!!
+        return productApi.getUsers(token).any { it.email == email }
     }
 
     suspend fun createUser(
@@ -80,7 +84,9 @@ class MainViewModel(
 
     fun loadUsers(){
         viewModelScope.launch {
-            val users = productApi.getUsers()
+            val token = authRepository.getRefreshToken()!!
+
+            val users = productApi.getUsers(token)
             _state.update {
                 users
             }

@@ -28,13 +28,13 @@ class FavoriteViewModel(
         viewModelScope.launch {
             dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
                 val isInFavorite = if (productApi.getIsInFavorite(userID, productID) > 0) {
-                   repos.deleteClientItemByProduct(userID, productID)
+                   productApi.deleteFavoriteByIdClientAndProduct(userID, productID)
+                    loadFavorite()
                     false
                 } else {
                     productApi.insertFavorites(Favorite(clientId = userID, productId = productID))
                     true
                 }
-
                 _state.update {
                     it.apply {
                         it.toMutableList()[it.indexOfFirst { r -> r.id == productID }] =
@@ -54,30 +54,32 @@ class FavoriteViewModel(
         get() = _state.asStateFlow()
 
     init {
+       loadFavorite()
+    }
+    fun loadFavorite(){
         viewModelScope.launch {
-            dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userId ->
-                // Получаем данные один раз
-                val baskets = productApi.getItemsByUser(userId)
-
-                // Преобразуем в Flow
-                flow {
-                    emit(baskets.mapNotNull { basket ->
-                        productApi.getProductsByID(basket.productId)?.let { product ->
-                            val isFavorite = productApi.getIsInFavorite(userId, product.id ?: -1)
+            dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
+                val favorite =  productApi.getFavoritesByID(userID)
+                flow{
+                    emit(favorite.mapNotNull { favorite->
+                        productApi.getProductsByID(favorite.productId)?.let { product ->
+                            val isInFavorite = productApi.getIsInFavorite(userID, product.id ?: -1)
                             ProductsModel(
                                 product.id ?: -1,
                                 product.name,
                                 product.description,
                                 product.cost,
                                 product.imageid,
-                                isFavorite > 0,
+                                isInFavorite > 0,
                                 product.imageuri
 
                             )
                         }
                     })
-                }.collect { products ->
-                    _state.update { products }
+                }
+            }?.collect { list ->
+                _state.update {
+                    list
                 }
             }
         }

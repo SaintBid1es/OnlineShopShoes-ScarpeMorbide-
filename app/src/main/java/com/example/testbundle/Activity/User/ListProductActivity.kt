@@ -22,8 +22,10 @@ import com.example.testbundle.Adapter.ProductCardUserAdapter
 import com.example.testbundle.FavoritePreferences
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityListProductBinding
 import com.example.testbundle.db.ProductsModel
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -38,7 +40,7 @@ class ListProductActivity : BaseActivity() {
     private lateinit var adapter: ProductCardUserAdapter
 
     private var recyclerViewState: Parcelable? = null
-
+    private lateinit var authRepository: AuthRepository
     companion object {
         var idUser: Int = 0
     }
@@ -50,7 +52,7 @@ class ListProductActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityListProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        authRepository = AuthRepository(applicationContext)
         initViews()
         setupAdapters()
         setupObservers()
@@ -185,28 +187,34 @@ class ListProductActivity : BaseActivity() {
 
     private fun loadUserData(email: String?, password: String?) {
         lifecycleScope.launch {
-            try {
-                val list = withContext(Dispatchers.IO) {
-                    productApi.getUsers()
+            withAuthToken { token ->
+                try {
+                    val list = withContext(Dispatchers.IO) {
+
+                        productApi.getUsers(token)
+                    }
+                    list.find { it.email == email && it.password == password }?.let { user ->
+                        binding.tvNameAccount.text = user.name
+                        val isAdmin =
+                            user.speciality == "Администратор" || user.speciality == "Administrator"
+                        binding.layoutProduct.isVisible = isAdmin
+                        binding.layoutUsers.isVisible = isAdmin
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    // Обработка ошибки загрузки данных пользователя
                 }
-                list.find { it.email == email && it.password == password }?.let { user ->
-                    binding.tvNameAccount.text = user.name
-                    val isAdmin = user.speciality == "Администратор" || user.speciality == "Administrator"
-                    binding.layoutProduct.isVisible = isAdmin
-                    binding.layoutUsers.isVisible = isAdmin
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                // Обработка ошибки загрузки данных пользователя
             }
         }
     }
 
     private fun SearchUserId(email: String?, password: String?) {
         lifecycleScope.launch {
+            withAuthToken { token->
             try {
                 val list = withContext(Dispatchers.IO) {
-                    productApi.getUsers()
+
+                    productApi.getUsers(token)
                 }
                 list.find { it.email == email && it.password == password }?.let {
                     idUser = it.id ?: 0
@@ -217,6 +225,7 @@ class ListProductActivity : BaseActivity() {
             }
         }
     }
+        }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)

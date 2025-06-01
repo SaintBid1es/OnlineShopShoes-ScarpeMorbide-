@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_OPEN_DOCUMENT
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -38,11 +39,14 @@ import com.example.testbundle.LocaleUtils
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
+import com.example.testbundle.Repository.Result
 import com.example.testbundle.databinding.ActivityProfileBinding
 import com.example.testbundle.db.Brand
 import com.example.testbundle.db.Category
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -59,13 +63,14 @@ class ProfileActivity : BaseActivity() {
     val viewModelBrand: BrandViewModel by viewModels()
     val viewModelCategory: CategoryViewModel by viewModels()
     val viewModelClient: MainViewModel by viewModels()
+    private lateinit var authRepository: AuthRepository
     private lateinit var Client: Item
     lateinit var prefs : DataStore<androidx.datastore.preferences.core.Preferences>
     companion object {
         val EMAIL_KEY = stringPreferencesKey("email")
         val PASSWORD_KEY = stringPreferencesKey("password")
         var idAccount = 0
-        var language: Boolean=false
+
     }
     val MY_REQUEST_CODE1 = 100
     private val productApi = RetrofitClient.apiService
@@ -75,6 +80,7 @@ class ProfileActivity : BaseActivity() {
         prefs = applicationContext.dataStore
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        authRepository = AuthRepository(applicationContext)
 
         /**
          * Инцициализация  категорий и брэндов
@@ -98,6 +104,7 @@ class ProfileActivity : BaseActivity() {
 
         binding.btnArrowBack.setOnClickListener {
             val intent = Intent(this@ProfileActivity, MainActivity::class.java)
+            authRepository.logout()
             startActivity(intent)
         }
         binding.imgClients.setOnClickListener {
@@ -120,13 +127,20 @@ class ProfileActivity : BaseActivity() {
 
 
         lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
-                prefs.data.collect { preferences->
-                    preferences[USER_ID_KEY]?.let { loadDataById(it) }
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                prefs.data.collect { preferences ->
+                    val userId = preferences[USER_ID_KEY]
+                    if (userId != null) {
+                        loadDataById(userId)
+                    } else {
+                        // Обработка случая, когда userId отсутствует
+                        Log.e("ProfileActivity", "User ID not found in DataStore")
+                    }
                     preferences[LANGUAGE_KEY]?.let { updateLocale(it) }
                 }
             }
         }
+
         /**
          * Смена языка
          */
@@ -145,9 +159,11 @@ class ProfileActivity : BaseActivity() {
         binding.btnImageResetPhotoProfile.setOnClickListener {
             binding.ivAvatarProfile.setImageResource(R.drawable.avatarmen)
             lifecycleScope.launch {
-                val user =productApi.getUsersByID(idAccount)
-                val updatedUser = user.copy(avatar = null)
-                viewModelClient.updateItem(user.id!!,updatedUser)
+                withAuthToken { token ->
+                    val user = productApi.getUsersByID(idAccount, token)
+                    val updatedUser = user.copy(avatar = null)
+                    viewModelClient.updateItem(user.id!!, updatedUser)
+                }
             }
 
         }
@@ -189,33 +205,44 @@ class ProfileActivity : BaseActivity() {
     private fun loadDataById(userId: Int) {
 
         lifecycleScope.launch {
-            val user = productApi.getUsersByID(userId)
-            user?.let {
-                with(binding) {
-                    tvLogin.text = it.email
-                    tvPassword.text = it.password
-                    tvName.text = it.name
-                    tvSurName.text = it.surname
-                    tvTelephone.text = it.telephone
-                    tvSpeciality.text = it.speciality
-                    if (!it.avatar.isNullOrEmpty()){
-                        ivAvatarProfile.setImageURI(it.avatar!!.toUri())
-                    }else {
-                        ivAvatarProfile.setImageResource(R.drawable.avatarmen)
+            withAuthToken { token->
+                val user = productApi.getUsersByID(userId,  token)
+                user?.let {
+                    with(binding) {
+                        tvLogin.text = it.email
+                        tvPassword.text = it.password
+                        tvName.text = it.name
+                        tvSurName.text = it.surname
+                        tvTelephone.text = it.telephone
+                        tvSpeciality.text = it.speciality
+                        if (!it.avatar.isNullOrEmpty()) {
+                            ivAvatarProfile.setImageURI(it.avatar!!.toUri())
+                        } else {
+                            ivAvatarProfile.setImageResource(R.drawable.avatarmen)
+                        }
+                        idAccount = it.id!!
+                        Client = Item(
+                            it.id,
+                            it.password,
+                            it.name,
+                            it.surname,
+                            it.email,
+                            it.telephone,
+                            it.speciality,
+                            null
+                        )
                     }
-                    idAccount = it.id!!
-                    Client = Item(it.id,it.password,it.name,it.surname,it.email,it.telephone,it.speciality,null)
-                }
-                if (it.speciality == "Администратор" || it.speciality == "Administrator" ) {
-                    binding.layoutUsers.isVisible = true
-                    binding.layoutProduct.isVisible = true
-                }
-                if (it.speciality == "Аналитик" || it.speciality == "Analyst" ) {
-                    binding.layoutMain.isVisible = false
-                    binding.layoutBasket.isVisible = false
-                    binding.layoutFavorite.isVisible = false
-                    binding.layoutHistory.isVisible = false
-                    binding.layoutGraphic.isVisible = true
+                    if (it.speciality == "Администратор" || it.speciality == "Administrator") {
+                        binding.layoutUsers.isVisible = true
+                        binding.layoutProduct.isVisible = true
+                    }
+                    if (it.speciality == "Аналитик" || it.speciality == "Analyst") {
+                        binding.layoutMain.isVisible = false
+                        binding.layoutBasket.isVisible = false
+                        binding.layoutFavorite.isVisible = false
+                        binding.layoutHistory.isVisible = false
+                        binding.layoutGraphic.isVisible = true
+                    }
                 }
             }
         }

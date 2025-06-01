@@ -22,6 +22,7 @@
     import com.example.testbundle.Activity.User.ProfileActivity
     import com.example.testbundle.OrderViewModel
     import com.example.testbundle.R
+    import com.example.testbundle.Repository.AuthRepository
     import com.example.testbundle.databinding.ActivityGraphicBinding
     import com.example.testbundle.db.MainDb
     import com.example.testbundle.db.SalesData
@@ -50,6 +51,7 @@
         private lateinit var binding: ActivityGraphicBinding
         private val viewModelOrder: OrderViewModel by viewModels()
         private val productApi = RetrofitClient.apiService
+        private lateinit var authRepository: AuthRepository
         companion object {
             var countUsersObject: Int? = null
             var avgCheckUserObject: Int? = null
@@ -66,7 +68,7 @@
             super.onCreate(savedInstanceState)
             binding = ActivityGraphicBinding.inflate(layoutInflater)
             setContentView(binding.root)
-
+            authRepository = AuthRepository(applicationContext)
             binding.imgProfile.setOnClickListener {
                 startActivity(Intent(this@GraphicActivity, ProfileActivity::class.java))
             }
@@ -104,7 +106,9 @@
             // Загружаем графики последовательно с небольшими задержками
             delay(150)
             loadChartWithAnimation(1) {
-                val countUsers = productApi.getUsers().count()
+                val token = authRepository.getAccessToken()!!
+                    val countUsers = productApi.getUsers(token).count()
+
                 countUsersObject=countUsers
                 listOf(Pair(countUsers, "Всего пользователей"))
             }

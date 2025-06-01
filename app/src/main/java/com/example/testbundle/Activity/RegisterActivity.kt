@@ -26,9 +26,11 @@ import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityRegisterBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,7 +51,7 @@ class RegisterActivity : BaseActivity() {
     private var emailMap = mutableMapOf<String,Boolean>()
     private var check:Boolean? = null
     private var randomValues:String?=null
-
+    private lateinit var authRepository: AuthRepository
     private val productApi = RetrofitClient.apiService
     val viewModel: MainViewModel by viewModels()
     private lateinit var binding: ActivityRegisterBinding
@@ -61,7 +63,7 @@ class RegisterActivity : BaseActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
+        authRepository = AuthRepository(applicationContext)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -149,29 +151,31 @@ class RegisterActivity : BaseActivity() {
 
 
             }
-            CoroutineScope(Dispatchers.IO).launch {
-            val list = productApi.getUsers()
-                if (list?.any { it.email == email } == true) {
-                    binding.etLogin.error = getString(R.string.this_email_is_used)
-                } else {
-                    val item = Item(
-                        null,
-                        password,
-                        name,
-                        surname,
-                        email,
-                        telephone,
-                        getString(R.string.client),
-                        null
-                    )
-                    viewModel.insertItem(item)
-                    sendNotification(
-                        getString(R.string.registerAccount),
-                        getString(R.string.SuccesregisterAccount)
-                    )
-                    startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
-                    finish()
-                }
+            lifecycleScope.launch {
+               withAuthToken { token ->
+                   val list = productApi.getUsers(token)
+                   if (list?.any { it.email == email } == true) {
+                       binding.etLogin.error = getString(R.string.this_email_is_used)
+                   } else {
+                       val item = Item(
+                           null,
+                           password,
+                           name,
+                           surname,
+                           email,
+                           telephone,
+                           getString(R.string.client),
+                           null
+                       )
+                       viewModel.insertItem(item)
+                       sendNotification(
+                           getString(R.string.registerAccount),
+                           getString(R.string.SuccesregisterAccount)
+                       )
+                       startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
+                       finish()
+                   }
+               }
 
             }
         }

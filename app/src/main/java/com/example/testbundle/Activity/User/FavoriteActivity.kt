@@ -32,6 +32,7 @@ import com.example.testbundle.Adapter.FavoriteAdapter
 import com.example.testbundle.FavoriteViewModel
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityFavoriteBinding
 import com.example.testbundle.db.Basket
 import com.example.testbundle.db.Favorite
@@ -39,6 +40,7 @@ import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Products
 import com.example.testbundle.db.ProductsModel
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,13 +52,14 @@ class FavoriteActivity : BaseActivity() {
     lateinit var prefs : DataStore<androidx.datastore.preferences.core.Preferences>
     val viewModel : FavoriteViewModel by viewModels()
     private val productApi = RetrofitClient.apiService
+    private lateinit var authRepository: AuthRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityFavoriteBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
         prefs = applicationContext.dataStore
         setContentView(binding.root)
         binding.rcViewFavorite.layoutManager = LinearLayoutManager(this)
-
+        authRepository = AuthRepository(applicationContext)
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.stateFavorite?.collect{
@@ -104,13 +107,14 @@ class FavoriteActivity : BaseActivity() {
      */
     private fun CheckRole(email: String?, password: String?) {
         lifecycleScope.launch {
-       val list =productApi.getUsers()
+           withAuthToken { token->
+            val list =productApi.getUsers(token)
            val user = list.find { it.email == email && it.password == password }
            user?.let {
                if (it.speciality == "Администратор" || it.speciality == "Administrator") {
                    binding.layoutUsers.isVisible = true
                    binding.layoutProduct.isVisible = true
-
+               }
            }
        }
         }

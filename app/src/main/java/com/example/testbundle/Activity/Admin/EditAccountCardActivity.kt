@@ -11,11 +11,13 @@ import androidx.lifecycle.lifecycleScope
 import com.example.shoesonlineshop.activity.BaseActivity
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
+
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityEditAccountCardBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,7 +44,8 @@ class EditAccountCardActivity : BaseActivity() {
         Вывод информации пользователя
          */
         lifecycleScope.launch {
-            val account = productApi.getUsersByID(id)
+            withAuthToken {  token->
+            val account = productApi.getUsersByID(id,token)
             account?.let {
                 withContext(Dispatchers.Main) {
                     binding.etName.setText(it.name)
@@ -56,6 +59,7 @@ class EditAccountCardActivity : BaseActivity() {
                     if (position >= 0) {
                         binding.SpinnerSpecialitety.setSelection(position)
                     }
+                }
                 }
             }
         }
@@ -141,13 +145,14 @@ class EditAccountCardActivity : BaseActivity() {
                         binding.etLogin.error = getString(R.string.this_email_is_used)
                     } else {
                         withContext(Dispatchers.IO) {
-                            val account = productApi.getUsersByID(id)
+                            withAuthToken { token->
+                            val account = productApi.getUsersByID(id, token)
                             val user = Item(id,password,name,surname,email,telephone,binding.SpinnerSpecialitety.selectedItem.toString(),account.avatar)
                             viewModel.updateItem(
                                 id,
                                user
                             )
-                        }
+                        }}
 
                         Toast.makeText(
                             this@EditAccountCardActivity,

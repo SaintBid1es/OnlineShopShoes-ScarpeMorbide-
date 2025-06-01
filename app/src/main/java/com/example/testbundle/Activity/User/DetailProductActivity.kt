@@ -24,9 +24,11 @@ import com.example.testbundle.Adapter.SizeAdapter
 import com.example.testbundle.BasketViewModel
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityDetailProductBinding
 import com.example.testbundle.db.Basket
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -48,6 +50,7 @@ class DetailProductActivity : BaseActivity() {
         private const val SIZE_PREFIX = "size_product_"
         private const val SELECTED_SIZE_KEY = "SELECTED_SIZE"
     }
+    private lateinit var authRepository: AuthRepository
 
     @SuppressLint("ResourceAsColor")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +60,7 @@ class DetailProductActivity : BaseActivity() {
         binding = ActivityDetailProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
+        authRepository = AuthRepository(applicationContext)
         selectedSize = savedInstanceState?.getInt(SELECTED_SIZE_KEY) ?: -1
 
         selectedSize = intent.getIntExtra("size_id", -1).takeIf { it != -1 }
@@ -103,10 +106,21 @@ class DetailProductActivity : BaseActivity() {
      */
     private fun SearchUserId(email: String?, password: String?) {
         lifecycleScope.launch {
-            val list = productApi.getUsers()
-            val user = list.find { it.email == email && it.password == password }
-            idUser = user!!.id!!
+            withAuthToken {token->
+            try {
+                    val list = productApi.getUsers(token)
+                    val user = list.find { it.email == email && it.password == password }
 
+                    user?.let {
+                        idUser = it.id ?: throw IllegalStateException("User ID is null")
+                    } ?: run {
+                        // Обработка случая, когда пользователь не найден
+                    }
+                } catch (e: Exception) {
+                    // Обработка ошибок сети и других исключений
+                }
+
+            }
         }
     }
 
@@ -156,7 +170,9 @@ class DetailProductActivity : BaseActivity() {
             }
 
 //            binding.imgShoes.setImageResource(product.imageId)
-            binding.tvAmountProduct.text = product.amount.toString()
+            runOnUiThread {
+                binding.tvAmountProduct.text = product.amount.toString()
+            }
             val rating = viewModelBasket.calculateTotalRating(productId)
             if (rating.isNaN()){
                 binding.tvRating.text = "0.0"

@@ -26,12 +26,15 @@ import com.example.testbundle.Activity.Admin.ListEmployeeActivity
 import com.example.testbundle.Activity.DataStoreRepo
 import com.example.testbundle.Activity.User.ListProductActivity.Companion.idUser
 import com.example.testbundle.Activity.User.ProfileActivity.Companion.idAccount
+
 import com.example.testbundle.Activity.dataStore
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityUpdateInformationBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,11 +59,12 @@ class UpdateInformationActivity : BaseActivity() {
     lateinit var prefs: DataStore<androidx.datastore.preferences.core.Preferences>
     private var currentUserId:Int?=-1
     private val productApi = RetrofitClient.apiService
+    private lateinit var authRepository: AuthRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityUpdateInformationBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
+        authRepository = AuthRepository(applicationContext)
 
 
         prefs = applicationContext.dataStore
@@ -75,14 +79,16 @@ class UpdateInformationActivity : BaseActivity() {
          * Выводит информацию пользователя
          */
         lifecycleScope.launch {
-            val account = productApi.getUsersByID(idAccount)
-            binding.etName.setText(account.name)
-            binding.etLogin.setText(account.email)
-            binding.etSurName.setText(account.surname)
-            binding.etPassword.setText(account.password)
-            binding.etTelephone.setText(account.telephone)
-            binding.tvSpecialitetyVivod.setText(account.speciality)
-            emailMap.put(account.email,true)
+            withAuthToken { token ->
+                val account = productApi.getUsersByID(idAccount,  token)
+                binding.etName.setText(account.name)
+                binding.etLogin.setText(account.email)
+                binding.etSurName.setText(account.surname)
+                binding.etPassword.setText(account.password)
+                binding.etTelephone.setText(account.telephone)
+                binding.tvSpecialitetyVivod.setText(account.speciality)
+                emailMap.put(account.email, true)
+            }
         }
 
         binding.btnArrowBack.setOnClickListener {
@@ -102,50 +108,53 @@ class UpdateInformationActivity : BaseActivity() {
             }
             var validaciaTrue = false
             lifecycleScope.launch {
-          val list = productApi.getUsers()
-              var isEmailUsedByOthers = false
-              list.forEach { user ->
-                  with(binding) {
-                      if (email.isNullOrEmpty()) {
-                          validaciaIsEmpty(etLogin)
-                      } else if (!email.contains("@mail.ru") && !email.contains("@gmail.com") && !email.contains(
-                              "@yandex.ru"
-                          )
-                      ) {
-                          etLogin.error = getString(R.string.please_input_correct_mail)
-                          validaciaTrue = false
-                      } else if (user.email == email && user.id != currentUserId) {
-                          etLogin.error =
-                              getString(R.string.this_email_is_used_by_another_account)
-                          isEmailUsedByOthers = true
-                          validaciaTrue = false
-                      } else if (email.length > 254 || email.length < 8) {
-                          etLogin.error = getString(R.string.please_input_correct_mail)
-                          validaciaTrue = false
-                      } else if (name.trim().isEmpty()) {
-                          validaciaIsEmpty(etName)
-                      } else if (name.length <= 1) {
-                          etName.error = getString(R.string.please_insert_correct_name)
-                          validaciaTrue = false
-                      } else if (telephone.trim().isEmpty()) {
-                          validaciaIsEmpty(etTelephone)
-                      } else if (!telephone.startsWith("+")) {
-                          etTelephone.error = getString(R.string.please_start_with)
-                      } else if (telephone.length < 6 || telephone.length > 15) {
-                          etTelephone.error =
-                              getString(R.string.telephone_must_be_6_to_15_character)
-                          validaciaTrue = false
-                      } else {
-                          validaciaTrue = true
-                      }
-                  }
-              }
+            withAuthToken { token ->
+                val list = productApi.getUsers(token)
+
+                var isEmailUsedByOthers = false
+                list.forEach { user ->
+                    with(binding) {
+                        if (email.isNullOrEmpty()) {
+                            validaciaIsEmpty(etLogin)
+                        } else if (!email.contains("@mail.ru") && !email.contains("@gmail.com") && !email.contains(
+                                "@yandex.ru"
+                            )
+                        ) {
+                            etLogin.error = getString(R.string.please_input_correct_mail)
+                            validaciaTrue = false
+                        } else if (user.email == email && user.id != currentUserId) {
+                            etLogin.error =
+                                getString(R.string.this_email_is_used_by_another_account)
+                            isEmailUsedByOthers = true
+                            validaciaTrue = false
+                        } else if (email.length > 254 || email.length < 8) {
+                            etLogin.error = getString(R.string.please_input_correct_mail)
+                            validaciaTrue = false
+                        } else if (name.trim().isEmpty()) {
+                            validaciaIsEmpty(etName)
+                        } else if (name.length <= 1) {
+                            etName.error = getString(R.string.please_insert_correct_name)
+                            validaciaTrue = false
+                        } else if (telephone.trim().isEmpty()) {
+                            validaciaIsEmpty(etTelephone)
+                        } else if (!telephone.startsWith("+")) {
+                            etTelephone.error = getString(R.string.please_start_with)
+                        } else if (telephone.length < 6 || telephone.length > 15) {
+                            etTelephone.error =
+                                getString(R.string.telephone_must_be_6_to_15_character)
+                            validaciaTrue = false
+                        } else {
+                            validaciaTrue = true
+                        }
+                    }
+                }
+
 
 
 
                 if (validaciaTrue && !isEmailUsedByOthers) {
                     lifecycleScope.launch {
-                        val account = productApi.getUsersByID(idAccount)
+                        val account = productApi.getUsersByID(idAccount,token)
 
 
                         val pass = binding.etPassword.text.toString()
@@ -180,7 +189,7 @@ class UpdateInformationActivity : BaseActivity() {
                     }
                 }
 
-
+            }
             }
         }
         binding.newPassword.setOnClickListener {
@@ -219,41 +228,57 @@ class UpdateInformationActivity : BaseActivity() {
         val customdialog = dialog.create()
 
         lifecycleScope.launch {
+            withAuthToken { token ->
+                val currentUser = productApi.getUsersByID(currentUserId ?: -1, token)
 
-            val currentUser = productApi.getUsersByID(currentUserId ?: -1)
-
-            btnConfirm.setOnClickListener {
-                val oldPassword = etOldPassword.text?.toString() ?: ""
-                val newPassword = etNewPassword.text?.toString() ?: ""
-                val confirmPassword = etConfirmPassword.text?.toString() ?: ""
-                when {
-                    oldPassword != currentUser.password -> {
-                        Toast.makeText(this@UpdateInformationActivity,
-                            getString(R.string.password_dont_with_old_password), Toast.LENGTH_SHORT).show()
-                    }
-                    newPassword != confirmPassword -> {
-                        Toast.makeText(this@UpdateInformationActivity,
-                            getString(R.string.check_new_password), Toast.LENGTH_SHORT).show()
-                    }
-                    !validatePassword(newPassword) -> {
-                        Toast.makeText(this@UpdateInformationActivity,
-                            getString(R.string.new_password_dont_success_tz), Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        val updatedUser = currentUser.copy(password = confirmPassword)
-                        lifecycleScope.launch {
-                            viewModel.updateItem(updatedUser.id!!,updatedUser)
-                            prefs.edit { preferences ->
-                                preferences[ProfileActivity.PASSWORD_KEY] = confirmPassword
-                            }
-                            binding.etPassword.setText(confirmPassword)
-                            customdialog.dismiss()
-                            Toast.makeText(this@UpdateInformationActivity,
-                                getString(R.string.password_success_edit), Toast.LENGTH_SHORT).show()
-                            val intent = Intent(this@UpdateInformationActivity, ProfileActivity::class.java)
-                            startActivity(intent)
+                btnConfirm.setOnClickListener {
+                    val oldPassword = etOldPassword.text?.toString() ?: ""
+                    val newPassword = etNewPassword.text?.toString() ?: ""
+                    val confirmPassword = etConfirmPassword.text?.toString() ?: ""
+                    when {
+                        oldPassword != currentUser.password -> {
+                            Toast.makeText(
+                                this@UpdateInformationActivity,
+                                getString(R.string.password_dont_with_old_password),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
 
+                        newPassword != confirmPassword -> {
+                            Toast.makeText(
+                                this@UpdateInformationActivity,
+                                getString(R.string.check_new_password), Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        !validatePassword(newPassword) -> {
+                            Toast.makeText(
+                                this@UpdateInformationActivity,
+                                getString(R.string.new_password_dont_success_tz), Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        else -> {
+                            val updatedUser = currentUser.copy(password = confirmPassword)
+                            lifecycleScope.launch {
+                                viewModel.updateItem(updatedUser.id!!, updatedUser)
+                                prefs.edit { preferences ->
+                                    preferences[ProfileActivity.PASSWORD_KEY] = confirmPassword
+                                }
+                                binding.etPassword.setText(confirmPassword)
+                                customdialog.dismiss()
+                                Toast.makeText(
+                                    this@UpdateInformationActivity,
+                                    getString(R.string.password_success_edit), Toast.LENGTH_SHORT
+                                ).show()
+                                val intent = Intent(
+                                    this@UpdateInformationActivity,
+                                    ProfileActivity::class.java
+                                )
+                                startActivity(intent)
+                            }
+
+                        }
                     }
                 }
             }

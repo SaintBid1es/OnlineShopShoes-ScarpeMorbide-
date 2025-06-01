@@ -22,9 +22,11 @@ import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.MainActivity
 import com.example.testbundle.MainViewModel
 import com.example.testbundle.R
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.databinding.ActivityForgenPasswordBinding
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,11 +50,12 @@ class ForgenPasswordActivity : AppCompatActivity() {
     lateinit var binding: ActivityForgenPasswordBinding
     private val productApi = RetrofitClient.apiService
     val viewModel: MainViewModel by viewModels()
+    private lateinit var authRepository: AuthRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityForgenPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        authRepository = AuthRepository(applicationContext)
         binding.btnArrowBack.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -226,24 +229,26 @@ class ForgenPasswordActivity : AppCompatActivity() {
     }
 
     private fun updatePasswordForEmail(email: String, password: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val list = productApi.getUsers()
-                val user = list.find {
-                    it.email == email
+        lifecycleScope.launch {
+           withAuthToken { token ->
+               val list = productApi.getUsers("token")
+               val user = list.find {
+                   it.email == email
 
-                }
-                val correctUser = Item(
-                    user!!.id,
-                    password,
-                    user.name,
-                    user.surname,
-                    user.email,
-                    user.telephone,
-                    user.speciality,
-                    user.avatar
-                )
-                viewModel.updateItem(user.id!!, correctUser)
+               }
 
+               val correctUser = Item(
+                   user!!.id,
+                   password,
+                   user.name,
+                   user.surname,
+                   user.email,
+                   user.telephone,
+                   user.speciality,
+                   user.avatar
+               )
+               viewModel.updateItem(user.id!!, correctUser)
+           }
         }
 
     } @SuppressLint("ResourceAsColor")
