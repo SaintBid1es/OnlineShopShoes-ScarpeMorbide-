@@ -138,59 +138,58 @@ class DetailProductActivity : BaseActivity() {
                 sizeAdapter?.setSelectedPosition(selectedSize)
                 checkProductInBasket(selectedSize)
             }
-            val product = productApi.getProductsByID(productId) ?: return@launch
-            binding.tvNameProduct.text = product.name
-            binding.tvDescriptionProduct.text = product.description
-            binding.tvCostProduct.text = "${product.cost}"
-            if (!product.imageuri.isNullOrEmpty()) {
-                try {
-                    // Check if the URI is already complete or just a filename
-                    val imageUri = if (product.imageuri.startsWith("content://")) {
-                        Uri.parse(product.imageuri)
-                    } else {
-                        // Construct proper URI for the image file
-                        Uri.parse("content://com.example.testbundle.fileprovider/product_images/${product.imageuri}")
+            withAuthToken {token->
+                val product = productApi.getProductsByID(productId,token) ?: return@withAuthToken
+                binding.tvNameProduct.text = product.name
+                binding.tvDescriptionProduct.text = product.description
+                binding.tvCostProduct.text = "${product.cost}"
+                if (!product.imageuri.isNullOrEmpty()) {
+                    try {
+
+                        val uri = "${RetrofitClient.BASE_URL}image/${product.imageuri}"
+                        runOnUiThread {
+                            Glide.with(this@DetailProductActivity)
+                                .load(uri)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .error(R.drawable.avatarmen)
+                                .into(binding.imgShoes)
+                        }
+                    } catch (e: Exception) {
+                        runOnUiThread {
+                            binding.imgShoes.setImageResource(R.drawable.avatarmen)
+                        }
                     }
+
+                } else {
                     runOnUiThread {
-                        Glide.with(this@DetailProductActivity)
-                            .load(imageUri)
-                            .transition(DrawableTransitionOptions.withCrossFade())
-                            .error(R.drawable.avatarmen)
-                            .into(binding.imgShoes)
-                    }
-                } catch (e: Exception) {
-                    runOnUiThread {
-                        binding.imgShoes.setImageResource(R.drawable.avatarmen)
+                        binding.imgShoes.setImageResource(product.imageid ?: R.drawable.avatarmen)
                     }
                 }
-            } else {
-                runOnUiThread {
-                    binding.imgShoes.setImageResource(product.imageid ?: R.drawable.avatarmen)
-                }
-            }
+
 
 //            binding.imgShoes.setImageResource(product.imageId)
-            runOnUiThread {
-                binding.tvAmountProduct.text = product.amount.toString()
-            }
-            val rating = viewModelBasket.calculateTotalRating(productId)
-            if (rating.isNaN()){
-                binding.tvRating.text = "0.0"
-            }else{
-                binding.tvRating.text = "${String.format("%.2f", rating)}"
-            }
-            binding.tvCountReviews.text = viewModelBasket.countProductById(productId).toString()
-            lifecycleScope.launch {
-                val brand = productApi.getBrandNameById(product.brandid)
+                runOnUiThread {
+                    binding.tvAmountProduct.text = product.amount.toString()
+                }
+                val rating = viewModelBasket.calculateTotalRating(productId)
+                if (rating.isNaN()) {
+                    binding.tvRating.text = "0.0"
+                } else {
+                    binding.tvRating.text = "${String.format("%.2f", rating)}"
+                }
+                val count = viewModelBasket.countProductById(productId).toString()
+                binding.tvCountReviews.text = count
+                lifecycleScope.launch {
+                    val brand = productApi.getBrandNameById(product.brandid)
                     binding.tvBrand.text = brand
 
-              val category =  productApi.getCategoryNameById(product.categoryid)
+                    val category = productApi.getCategoryNameById(product.categoryid)
                     binding.tvCategory.text = category
 
+                }
             }
         }
     }
-
     /**
      * Инициализация размеров обуви
      */

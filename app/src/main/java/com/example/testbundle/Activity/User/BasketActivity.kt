@@ -191,204 +191,225 @@ class BasketActivity : BaseActivity() {
      * Вывод списка корзины
      */
     private fun onUpdateView(entities: List<BasketModel>) {
-        val totalPrice = viewModel.calculateTotalPrice(entities)
-        binding.tvTotalPrice.text =
-            "${getString(R.string.total_price)}${String.format("%.2f", totalPrice)}"
-        binding.apply {
-            val adapter = BasketAdapter.BasketAdapter(entities, onDelete = { item ->
-                item?.let { item.id?.let { it1 -> viewModel.deleteItemByProductId(it1, it.size) } }
-            }, Perexod = {
-                intent =
-                    Intent(this@BasketActivity, DetailProductActivity::class.java).apply {
-                        putExtra("product_id", it.id)
-                        putExtra("size_id", it.size)
+        lifecycleScope.launch {
+        withAuthToken { token ->
+            val totalPrice = viewModel.calculateTotalPrice(entities)
+            binding.tvTotalPrice.text =
+                "${getString(R.string.total_price)}${String.format("%.2f", totalPrice)}"
+            binding.apply {
+                val adapter = BasketAdapter.BasketAdapter(entities, onDelete = { item ->
+                    item?.let {
+                        item.id?.let { it1 ->
+                            viewModel.deleteItemByProductId(
+                                it1,
+                                it.size
+                            )
+                        }
                     }
-                startActivity(intent)
-            }, PlusCount = { id ->
-                    viewModel.increaseQuantity(id)
-            }, MinusCount = { id ->
-                    viewModel.decreaseQuantity(id)
-            })
-            rcViewBasket.adapter = adapter
-            rcViewBasket.layoutManager = GridLayoutManager(this@BasketActivity, 2)
+                }, Perexod = {
+                    intent =
+                        Intent(this@BasketActivity, DetailProductActivity::class.java).apply {
+                            putExtra("product_id", it.id)
+                            putExtra("size_id", it.size)
+                        }
+                    startActivity(intent)
+                }, PlusCount = { id ->
+                    viewModel.increaseQuantity(id, token)
+                }, MinusCount = { id ->
+                    viewModel.decreaseQuantity(id, token)
+                })
 
-            /**
-             * Кнопка оформления заказа
-             */
-            binding.btnPlaceOrder.setOnClickListener {
-                if (entities.isEmpty()) {
-                    Toast.makeText(
-                        this@BasketActivity,
-                        getString(R.string.there_are_no_products_in_the_cart),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    val userId = currentUserId ?: run {
+                rcViewBasket.adapter = adapter
+                rcViewBasket.layoutManager = GridLayoutManager(this@BasketActivity, 2)
+
+
+                /**
+                 * Кнопка оформления заказа
+                 */
+                binding.btnPlaceOrder.setOnClickListener {
+                    if (entities.isEmpty()) {
                         Toast.makeText(
                             this@BasketActivity,
-                            getString(R.string.user_id_is_not_available),
+                            getString(R.string.there_are_no_products_in_the_cart),
                             Toast.LENGTH_SHORT
                         ).show()
-                        return@setOnClickListener
-                    }
-
-                    val dialog = AlertDialog.Builder(this@BasketActivity)
-                    val dialogView = layoutInflater.inflate(R.layout.payment_dialog, null)
-                    val etNumberCard = dialogView.findViewById<EditText>(R.id.etNumberCard)
-                    val etmonthAndYear = dialogView.findViewById<EditText>(R.id.etMonthAndYear)
-                    val cvc = dialogView.findViewById<EditText>(R.id.etCVC)
-                    val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
-                    val btnLeave = dialogView.findViewById<ImageButton>(R.id.btnLeave)
-                    dialog.setView(dialogView)
-                    dialog.setCancelable(false)
-
-
-                    etmonthAndYear.inputType = InputType.TYPE_CLASS_NUMBER
-                    etmonthAndYear.filters = arrayOf(InputFilter.LengthFilter(5))
-
-                    etmonthAndYear.addTextChangedListener(object : TextWatcher {
-                        private var isFormatting = false
-                        private var deletingSlash = false
-                        private var deletedChar = ' '
-
-                        override fun beforeTextChanged(
-                            s: CharSequence?,
-                            start: Int,
-                            count: Int,
-                            after: Int
-                        ) {
-                            if (count > 0 && !isFormatting) {
-                                deletingSlash = start == 2
-                                deletedChar = s?.getOrNull(start) ?: ' '
-                            }
-                        }
-
-                        override fun onTextChanged(
-                            s: CharSequence?,
-                            start: Int,
-                            before: Int,
-                            count: Int
-                        ) {
-                            if (isFormatting) return
-
-                            val text = s?.toString() ?: ""
-
-
-                            if (text.length == 2 && before == 0 && !text.contains("/")) {
-                                isFormatting = true
-                                etmonthAndYear.setText("$text/")
-                                etmonthAndYear.setSelection(3)
-                                isFormatting = false
-                            } else if (deletingSlash && deletedChar == '/') {
-                                isFormatting = true
-                                etmonthAndYear.setText(text.substring(0, 1))
-                                etmonthAndYear.setSelection(1)
-                                isFormatting = false
-                            }
-                        }
-
-                        override fun afterTextChanged(s: Editable?) {}
-                    })
-
-                    val customdialog = dialog.create()
-                    customdialog.show()
-
-                    btnConfirm.setOnClickListener {
-                        val cardNumber = etNumberCard.text.toString().replace(" ", "")
-                        val cvcCode = cvc.text.toString()
-                        val expiryDate = etmonthAndYear.text.toString()
-                        val cardValid = isCardNumberValid(cardNumber)
-                        val cvcValid = isCvcValid(cvcCode)
-                        val expiryValid = isExpiryDateValid(expiryDate)
-                        etNumberCard.background = ContextCompat.getDrawable(
-                            this@BasketActivity,
-                            if (cardValid) R.drawable.correct_background else R.drawable.error_background
-                        )
-                        cvc.background = ContextCompat.getDrawable(
-                            this@BasketActivity,
-                            if (cvcValid) R.drawable.correct_background else R.drawable.error_background
-                        )
-                        etmonthAndYear.background = ContextCompat.getDrawable(
-                            this@BasketActivity,
-                            if (expiryValid) R.drawable.correct_background else R.drawable.error_background
-                        )
-
-                        if (!cardValid || !cvcValid || !expiryValid) {
-                            showDetailedErrorToast(cardValid, cvcValid, expiryValid)
+                    } else {
+                        val userId = currentUserId ?: run {
+                            Toast.makeText(
+                                this@BasketActivity,
+                                getString(R.string.user_id_is_not_available),
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@setOnClickListener
                         }
 
-                        val orderDate =
-                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                        val totalPrice = entities.sumOf { it.cost * it.count }
-                        val order = Order(
-                            clientId = userId,
-                            orderdate = orderDate,
-                            totalprice = totalPrice
-                        )
+                        val dialog = AlertDialog.Builder(this@BasketActivity)
+                        val dialogView = layoutInflater.inflate(R.layout.payment_dialog, null)
+                        val etNumberCard = dialogView.findViewById<EditText>(R.id.etNumberCard)
+                        val etmonthAndYear = dialogView.findViewById<EditText>(R.id.etMonthAndYear)
+                        val cvc = dialogView.findViewById<EditText>(R.id.etCVC)
+                        val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
+                        val btnLeave = dialogView.findViewById<ImageButton>(R.id.btnLeave)
+                        dialog.setView(dialogView)
+                        dialog.setCancelable(false)
 
-                        viewModelOrder.insertOrder(order) { orderId ->
-                            if (orderId == null) {
-                                showErrorToast(getString(R.string.failed_to_create_order))
-                                return@insertOrder
+
+                        etmonthAndYear.inputType = InputType.TYPE_CLASS_NUMBER
+                        etmonthAndYear.filters = arrayOf(InputFilter.LengthFilter(5))
+
+                        etmonthAndYear.addTextChangedListener(object : TextWatcher {
+                            private var isFormatting = false
+                            private var deletingSlash = false
+                            private var deletedChar = ' '
+
+                            override fun beforeTextChanged(
+                                s: CharSequence?,
+                                start: Int,
+                                count: Int,
+                                after: Int
+                            ) {
+                                if (count > 0 && !isFormatting) {
+                                    deletingSlash = start == 2
+                                    deletedChar = s?.getOrNull(start) ?: ' '
+                                }
                             }
 
-                            entities.forEach { record ->
-                                val orderItem = OrderItem(
-                                    orderid = orderId,
-                                    productid = record.id ?: -1,
-                                    productname = record.name,
-                                    quantity = record.count,
-                                    price = record.cost,
-                                    size = record.size + 6
+                            override fun onTextChanged(
+                                s: CharSequence?,
+                                start: Int,
+                                before: Int,
+                                count: Int
+                            ) {
+                                if (isFormatting) return
+
+                                val text = s?.toString() ?: ""
+
+
+                                if (text.length == 2 && before == 0 && !text.contains("/")) {
+                                    isFormatting = true
+                                    etmonthAndYear.setText("$text/")
+                                    etmonthAndYear.setSelection(3)
+                                    isFormatting = false
+                                } else if (deletingSlash && deletedChar == '/') {
+                                    isFormatting = true
+                                    etmonthAndYear.setText(text.substring(0, 1))
+                                    etmonthAndYear.setSelection(1)
+                                    isFormatting = false
+                                }
+                            }
+
+                            override fun afterTextChanged(s: Editable?) {}
+                        })
+
+                        val customdialog = dialog.create()
+                        customdialog.show()
+
+                        btnConfirm.setOnClickListener {
+                            val cardNumber = etNumberCard.text.toString().replace(" ", "")
+                            val cvcCode = cvc.text.toString()
+                            val expiryDate = etmonthAndYear.text.toString()
+                            val cardValid = isCardNumberValid(cardNumber)
+                            val cvcValid = isCvcValid(cvcCode)
+                            val expiryValid = isExpiryDateValid(expiryDate)
+                            etNumberCard.background = ContextCompat.getDrawable(
+                                this@BasketActivity,
+                                if (cardValid) R.drawable.correct_background else R.drawable.error_background
+                            )
+                            cvc.background = ContextCompat.getDrawable(
+                                this@BasketActivity,
+                                if (cvcValid) R.drawable.correct_background else R.drawable.error_background
+                            )
+                            etmonthAndYear.background = ContextCompat.getDrawable(
+                                this@BasketActivity,
+                                if (expiryValid) R.drawable.correct_background else R.drawable.error_background
+                            )
+
+                            if (!cardValid || !cvcValid || !expiryValid) {
+                                showDetailedErrorToast(cardValid, cvcValid, expiryValid)
+                                return@setOnClickListener
+                            }
+
+                            val orderDate =
+                                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                            val totalPrice = entities.sumOf { it.cost * it.count }
+                            val order = Order(
+                                clientId = userId,
+                                orderdate = orderDate,
+                                totalprice = totalPrice
+                            )
+
+                            viewModelOrder.insertOrder(order) { orderId ->
+                                if (orderId == null) {
+                                    showErrorToast(getString(R.string.failed_to_create_order))
+                                    return@insertOrder
+                                }
+
+                                entities.forEach { record ->
+                                    val orderItem = OrderItem(
+                                        orderid = orderId,
+                                        productid = record.id ?: -1,
+                                        productname = record.name,
+                                        quantity = record.count,
+                                        price = record.cost,
+                                        size = record.size + 6
+                                    )
+
+                                    viewModelOrderItem.insertOrderItem(orderItem)
+                                }
+                                entities.forEach { product ->
+                                    val products = Products(
+                                        product.id,
+                                        product.name,
+                                        product.cost,
+                                        product.description,
+                                        product.size,
+                                        product.imageId,
+                                        product.brand,
+                                        product.category,
+                                        product.amount - 1,
+                                        product.imageUri
+                                    )
+                                    viewModelProducts.updateProduct(products.id!!, products)
+                                }
+                                val productsText = entities.joinToString("\n") { item ->
+                                    "Товар: ${item.name}, Размер: ${item.size + 6}, Кол-во: ${item.count}, Цена: ${item.cost}"
+                                }
+                                val emailText =
+                                    "Токен заказа: $orderId\nДата заказа:  $orderDate\nСостав заказа: $productsText\nИтоговая стоимость: $totalPrice".trimIndent()
+
+                                Thread(Runnable {
+                                    sendEmail(EMAIL, "$emailText")
+                                }).start()
+
+                                sendNotification(
+                                    getString(R.string.order),
+                                    getString(R.string.the_order_was_successfully_completed)
                                 )
 
-                                viewModelOrderItem.insertOrderItem(orderItem)
-                            }
-                            entities.forEach { product->
-                                val products = Products(
-                                    product.id,
-                                    product.name,
-                                    product.cost,
-                                    product.description,
-                                    product.size,
-                                    product.imageId,
-                                    product.brand,
-                                    product.category,
-                                    product.amount-1,
-                                    product.imageUri
+                                viewModel.deleteItem(token)
+                                adapter.notifyDataSetChanged()
+                                showSuccessToast(getString(R.string.the_order_was_successfully_completed))
+                                startActivity(
+                                    Intent(
+                                        this@BasketActivity,
+                                        BasketActivity::class.java
+                                    )
                                 )
-                                viewModelProducts.updateProduct(products.id!!,products)
                             }
-                            val productsText = entities.joinToString("\n") { item ->
-                                "Товар: ${item.name}, Размер: ${item.size + 6}, Кол-во: ${item.count}, Цена: ${item.cost}"
-                            }
-                            val emailText = "Токен заказа: $orderId\nДата заказа:  $orderDate\nСостав заказа: $productsText\nИтоговая стоимость: $totalPrice".trimIndent()
+                        }
 
-                            Thread(Runnable {
-                                sendEmail(EMAIL, "$emailText")
-                            }).start()
-
-                            sendNotification(getString(R.string.order),getString(R.string.the_order_was_successfully_completed))
-
-                            viewModel.deleteItem()
-                            adapter.notifyDataSetChanged()
-                            showSuccessToast(getString(R.string.the_order_was_successfully_completed))
+                        btnLeave.setOnClickListener {
                             startActivity(Intent(this@BasketActivity, BasketActivity::class.java))
                         }
                     }
-
-                    btnLeave.setOnClickListener {
-                        startActivity(Intent(this@BasketActivity, BasketActivity::class.java))
-                    }
                 }
-            }
+
 
             /**
              * Кнопка очистки корзины
              */
             binding.btnTrashBack.setOnClickListener {
-                viewModel.deleteItem()
+                viewModel.deleteItem(token)
                 adapter.notifyDataSetChanged()
                 Toast.makeText(
                     this@BasketActivity,
@@ -396,7 +417,8 @@ class BasketActivity : BaseActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-
+            }
+        }
 
         }
 

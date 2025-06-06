@@ -11,10 +11,19 @@ class AuthRepository(private val context: Context) {
     private val TAG = "AuthRepository"
 
     // Keys for shared preferences
-    private companion object {
+    companion object {
         const val ACCESS_TOKEN_KEY = "access_token"
         const val REFRESH_TOKEN_KEY = "refresh_token"
         const val TOKEN_EXPIRATION_KEY = "token_expiration"
+        private var instance: AuthRepository? = null
+
+        fun createInstance(context: Context) {
+            instance = AuthRepository(context)
+        }
+
+        fun getInstance(): AuthRepository {
+            return instance ?: throw NotImplementedError()
+        }
     }
 
     suspend fun login(email: String, password: String): Result<LoginResponse> {
@@ -127,6 +136,7 @@ class AuthRepository(private val context: Context) {
             apply()
         }
     }
+
     suspend fun getTokenWithRefresh(): String? {
         return when (val result = getValidAccessToken()) {
             is Result.Success -> "Bearer ${result.data}"

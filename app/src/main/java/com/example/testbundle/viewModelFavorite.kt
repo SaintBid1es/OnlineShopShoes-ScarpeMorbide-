@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.DataStoreRepo
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.Repository.FavoriteRepository
 import com.example.testbundle.Repository.ProductRepository
 import com.example.testbundle.db.Favorite
@@ -52,17 +53,20 @@ class FavoriteViewModel(
     private val _state: MutableStateFlow<List<ProductsModel>> = MutableStateFlow(emptyList())
     val stateFavorite: StateFlow<List<ProductsModel>>
         get() = _state.asStateFlow()
-
+    val repo = AuthRepository.getInstance()
+    val token = "Bearer ${repo.getAccessToken()}"
     init {
        loadFavorite()
     }
     fun loadFavorite(){
         viewModelScope.launch {
             dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
+
                 val favorite =  productApi.getFavoritesByID(userID)
+
                 flow{
                     emit(favorite.mapNotNull { favorite->
-                        productApi.getProductsByID(favorite.productId)?.let { product ->
+                        productApi.getProductsByID(favorite.productId,token)?.let { product ->
                             val isInFavorite = productApi.getIsInFavorite(userID, product.id ?: -1)
                             ProductsModel(
                                 product.id ?: -1,

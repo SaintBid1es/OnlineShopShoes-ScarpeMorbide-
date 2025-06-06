@@ -31,6 +31,7 @@ import com.example.testbundle.db.Brand
 
 import com.example.testbundle.db.Item
 import com.example.testbundle.db.MainDb
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -111,7 +112,9 @@ class ListEmployeeActivity : BaseActivity() {
     }
 
     private fun onUpdateView(entities: List<Item>) {
+
         binding.apply {
+
             val filteredEntities = entities.filter { it.id != currentUserId }
             rcView.adapter = AccountCardAdapter(
                 filteredEntities,
@@ -122,7 +125,11 @@ class ListEmployeeActivity : BaseActivity() {
                     startActivity(intent)
                 },
                 onDelete = { id ->
-                    viewModel?.deleteItem(id)
+                    lifecycleScope.launch {
+                        withAuthToken { token ->
+                            viewModel?.deleteItem(id, token)
+                        }
+                    }
                 }
             )
         }

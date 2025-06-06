@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.User.DetailProductActivity
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityBasketBinding
@@ -43,13 +44,20 @@ class BasketAdapter {
             fun bind(item: BasketModel) = with(binding) {
                 var counts: Int = item.count
                 val baseCost = item.cost
-
-                if (!item.imageUri.isNullOrEmpty()) {
+                if (!item.imageUri!!.startsWith("http://")){
+                    val uri = "${RetrofitClient.BASE_URL}image/${item.imageUri}"
+                    Glide.with(context)
+                        .load(uri)
+                        .placeholder(R.drawable.avatarmen)
+                        .error(R.drawable.image_ic)
+                        .into(pic)
+                }
+               else if (!item.imageUri.isNullOrEmpty()) {
                     try {
                         // Create proper URI for the image file
-                        val imageUri = Uri.parse("content://com.example.testbundle.fileprovider/product_images/${item.imageUri}")
+                        val uri = item.imageUri
                         Glide.with(context)
-                            .load(imageUri)
+                            .load(uri)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .error(R.drawable.avatarmen)
                             .into(pic)

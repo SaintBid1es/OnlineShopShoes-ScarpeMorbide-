@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ProductUserItemBinding
 import com.example.testbundle.db.ProductsModel
@@ -28,21 +29,20 @@ class ProductCardUserAdapter(
         @SuppressLint("SetTextI18n")
         fun bind(item: ProductsModel) {
             with(binding) {
-                // Load image
-                if (!item.imageUri.isNullOrEmpty()) {
-                    try {
-                        // Create proper URI for the image file
-                        val imageUri = Uri.parse("content://com.example.testbundle.fileprovider/product_images/${item.imageUri}")
-
-                        Glide.with(context)
-                            .load(imageUri)
-                            .transition(DrawableTransitionOptions.withCrossFade())
-                            .error(R.drawable.avatarmen)
-                            .into(pic)
-                    } catch (e: Exception) {
-                        pic.setImageResource(R.drawable.avatarmen)
-                    }
-                } else {
+                val uri = item.imageUri
+                if (!uri!!.startsWith("http://")){
+                    val uri = "${RetrofitClient.BASE_URL}image/$uri"
+                    Glide.with(context)
+                        .load(uri)
+                        .error(R.drawable.image_ic)
+                        .into(pic)
+                }else if(!uri.isNullOrEmpty()){
+                    Glide.with(context)
+                        .load(uri)
+                        .error(R.drawable.image_ic)
+                        .into(pic)
+                }
+                 else {
                     pic.setImageResource(item.imageId ?: R.drawable.avatarmen)
                 }
 

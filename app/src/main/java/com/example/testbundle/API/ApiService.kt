@@ -62,7 +62,7 @@ interface ApiService {
     suspend fun updateUser(@Path("id") id: Int, @Body user: Item): Response<Unit>
 
     @DELETE("Users/{id}")
-    suspend fun deleteUser(@Path("id") id: Int): Response<Unit>
+    suspend fun deleteUser(@Path("id") id: Int,@Header("Authorization") token:String): Response<Unit>
 
     //IMAGE
     @Multipart
@@ -275,25 +275,25 @@ interface ApiService {
 
     // PRODUCTS
     @GET("Products")
-    suspend fun getProducts(): List<Products>
+    suspend fun getProducts(@Header("Authorization") token:String): List<Products>
 
     @GET("Products/{id}")
-    suspend fun getProductsByID(@Path("id") id: Int): Products
+    suspend fun getProductsByID(@Path("id") id: Int,@Header("Authorization") token:String): Products
 
     @GET("Products/GetProductsByIds/{ids}")
-    suspend fun GetProductsByIds(@Path("ids") ids: List<Int>): List<Products>
+    suspend fun GetProductsByIds(@Path("ids") ids: List<Int>,@Header("Authorization") token:String): List<Products>
 
     @POST("Products")
-    suspend fun insertProducts(@Body products: Products): Products
+    suspend fun insertProducts(@Body products: Products,@Header("Authorization") token:String): Products
 
     @PUT("Products/{id}")
-    suspend fun updateProducts(@Path("id") id: Int, @Body products: Products): Response<Unit>
+    suspend fun updateProducts(@Path("id") id: Int, @Body products: Products,@Header("Authorization") token:String): Response<Unit>
 
     @PUT("Products/updateProductImage/{productId}/{imageId}/{imageUri}")
     suspend fun updateProductImage(@Path("id") productId: Int, @Path("imageId") imageId: Int, @Path("imageUri") imageUri: String?, @Body products: Products): Response<Unit>
 
     @DELETE("Products/{id}")
-    suspend fun deleteProducts(@Path("id") id: Int): Response<Unit>
+    suspend fun deleteProducts(@Path("id") id: Int,@Header("Authorization") token:String): Response<Unit>
 
     @DELETE("Products/Reset")
     suspend fun deleteTableProducts(): Response<Unit>

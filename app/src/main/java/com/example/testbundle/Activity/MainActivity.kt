@@ -184,7 +184,7 @@ class MainActivity : BaseActivity() {
             null
         )
 
-        productApi.insertUser(item)
+            productApi.insertUser(item)
 
         prefs.edit { preferences ->
             preferences[INITIALIZED_KEY] = true

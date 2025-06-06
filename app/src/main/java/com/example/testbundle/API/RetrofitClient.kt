@@ -8,9 +8,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-object RetrofitClient {
-    private const val BASE_URL = "http://192.168.1.6:5008/api/" //HOME
-//    private const val BASE_URL = "http://192.168.0.74:5008/api/" //RABOTA
+ object RetrofitClient {
+     const val BASE_URL = "http://192.168.1.6:5008/api/" //HOME
+//     const val BASE_URL = "http://192.168.0.74:5008/api/" //RABOTA
+   //  const val BASE_URL = "https://fd51-185-77-216-6.ngrok-free.app/api/" //NGROK
 
     var gson: Gson = GsonBuilder()
         .setLenient()
@@ -29,7 +30,7 @@ object RetrofitClient {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService::class.java)
     }

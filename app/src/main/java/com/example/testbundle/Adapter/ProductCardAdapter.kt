@@ -1,17 +1,15 @@
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ProductItemBinding
 import com.example.testbundle.db.ProductsModel
-import java.io.File
 
 class ProductCardAdapter(
     private val entities: List<ProductsModel>,
@@ -21,53 +19,34 @@ class ProductCardAdapter(
 
     inner class AccountHolder(item: View) : RecyclerView.ViewHolder(item) {
         val binding = ProductItemBinding.bind(item)
+
         @SuppressLint("StringFormatMatches")
         fun bind(item: ProductsModel, context: Context) = with(binding) {
-            // 1. Сначала пробуем загрузить из ресурсов
-            if (item.imageId != 0) {
+            val uri = item.imageUri
+            if (!uri!!.startsWith("http://")){
+                val uri = "${RetrofitClient.BASE_URL}image/$uri"
+                Glide.with(context)
+                    .load(uri)
+                    .placeholder(R.drawable.avatarmen)
+                    .error(R.drawable.image_ic)
+                    .into(ivProduct)
+            }
+            if (!uri.isNullOrEmpty() && (uri.startsWith("http://") || uri.startsWith("https://"))) {
+                // Загрузка по URL
+                Log.d("ImageLoad", "Loading image from URL: $uri")
+                Glide.with(context)
+                    .load(uri)
+                    .placeholder(R.drawable.avatarmen)
+                    .error(R.drawable.image_ic)
+                    .into(ivProduct)
+            } else if (item.imageId != 0) {
+                // Загрузка из ресурсов
                 ivProduct.setImageResource(item.imageId)
                 Log.d("ImageLoad", "Loaded from resources: ${item.imageId}")
-            }
-            // 2. Пробуем загрузить из файла
-            else if (!item.imageUri.isNullOrEmpty()) {
-                try {
-                    Log.d("ImageLoad", "Trying to load from URI: ${item.imageUri}")
-
-                    // Получаем только имя файла из URI (удаляем путь если есть)
-                    val fileName = item.imageUri.substringAfterLast("/")
-                    val imagesDir = File(context.filesDir, "product_images")
-                    val imageFile = File(imagesDir, fileName)
-
-                    Log.d("ImageLoad", "Full path: ${imageFile.absolutePath}")
-                    Log.d("ImageLoad", "File exists: ${imageFile.exists()}")
-                    Log.d("ImageLoad", "File size: ${imageFile.length()} bytes")
-
-                    if (imageFile.exists() && imageFile.length() > 0) {
-                        val uri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            imageFile
-                        )
-                        Log.d("ImageLoad", "FileProvider URI: $uri")
-
-                        Glide.with(context)
-                            .load(uri)
-                            .placeholder(R.drawable.apple)
-                            .error(R.drawable.arrow_ic) // Добавляем изображение для ошибок
-                            .into(ivProduct)
-                    } else {
-                        Log.w("ImageLoad", "File not found or empty")
-                        ivProduct.setImageResource(R.drawable.image_ic)
-                    }
-                } catch (e: Exception) {
-                    Log.e("ImageLoad", "Error loading image", e)
-                    ivProduct.setImageResource(R.drawable.star_ic)
-                }
-            }
-            // 3. Если изображение не задано
-            else {
-                Log.d("ImageLoad", "No image specified")
+            } else {
+                // Стандартная заглушка
                 ivProduct.setImageResource(R.drawable.avatarmen)
+                Log.d("ImageLoad", "No image specified")
             }
 
             tvInfProduct.text = context.getString(

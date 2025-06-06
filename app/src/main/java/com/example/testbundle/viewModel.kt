@@ -23,14 +23,15 @@ class MainViewModel(
 ) : ViewModel() {
 
     private val productApi = RetrofitClient.apiService
-    private lateinit var authRepository: AuthRepository
+    private var authRepository = AuthRepository.getInstance()
 
     /**
      * Функция удаления пользователя по идентификатору
      */
-    fun deleteItem(id: Int) {
+    fun deleteItem(id: Int,token: String) {
         viewModelScope.launch {
-            productApi.deleteUser(id)
+
+            productApi.deleteUser(id,token)
             loadUsers()
         }
     }
@@ -45,7 +46,8 @@ class MainViewModel(
         name: String,
         surname: String,
         telephone: String,
-        specialty: String
+        specialty: String,
+
     ) {
         val item = Item(
             null,
@@ -85,7 +87,6 @@ class MainViewModel(
     fun loadUsers(){
         viewModelScope.launch {
             val token = authRepository.getRefreshToken()!!
-
             val users = productApi.getUsers(token)
             _state.update {
                 users

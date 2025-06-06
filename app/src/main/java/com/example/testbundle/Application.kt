@@ -28,6 +28,7 @@ class Application : Application() {
         CategoryRepository.createInstance(applicationContext)
         DataStoreRepo.createInstance(applicationContext)
         ReviewsRepository.createInstance(applicationContext)
+        AuthRepository.createInstance(applicationContext)
 
     }
 }

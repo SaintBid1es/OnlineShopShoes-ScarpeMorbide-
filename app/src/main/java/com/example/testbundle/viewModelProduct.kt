@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.DataStoreRepo
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.Repository.BrandRepository
 import com.example.testbundle.Repository.CategoryRepository
 import com.example.testbundle.Repository.FavoriteRepository
@@ -30,7 +31,8 @@ class ProductViewModel : ViewModel() {
     private val categoryRepo = CategoryRepository.getInstance()
     private val authRepo = DataStoreRepo.getInstance()
 
-
+    val repo = AuthRepository.getInstance()
+    val token = "Bearer ${repo.getAccessToken()}"
     private val _stateProduct = MutableStateFlow<List<ProductsModel>>(emptyList())
     val stateProduct: StateFlow<List<ProductsModel>> get() = _stateProduct.asStateFlow()
 
@@ -45,7 +47,7 @@ class ProductViewModel : ViewModel() {
     private fun loadProducts() {
         viewModelScope.launch {
             authRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userID ->
-                val products = productApi.getProducts()
+                val products = productApi.getProducts(token)
                 val filteredProducts = applyFilters(products)
                 _stateProduct.update {
                     filteredProducts.map { product ->
@@ -105,21 +107,21 @@ class ProductViewModel : ViewModel() {
 
     fun insertProduct(product: Products) {
         viewModelScope.launch {
-            productApi.insertProducts(product)
+            productApi.insertProducts(product,token)
         }
     }
 
 
     fun updateProduct(id:Int,product: Products) {
         viewModelScope.launch {
-            productApi.updateProducts(id,product)
+            productApi.updateProducts(id,product,token)
         }
     }
 
 
     fun deleteProduct(productId: Int) {
         viewModelScope.launch {
-            productApi.deleteProducts(productId)
+            productApi.deleteProducts(productId,token)
         }.invokeOnCompletion {
             loadProducts()
         }

@@ -235,24 +235,7 @@ class RegisterActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Функция инициализации администратора
-     */
-    fun init() {
-        val item = Item(
-            null,
-            "Passwords",
-            "Mark",
-            "Vesenkov",
-            "markVesna@gmail.com",
-            "+79990008912",
-            getString(R.string.Administarator),
-            null
-        )
-        lifecycleScope.launch {
-            productApi.insertUser(item)
-        }
-    }
+
 
 
     fun sendNotification(title: String, description: String) {

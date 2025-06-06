@@ -4,5 +4,5 @@ import android.net.Uri
 
 sealed class ProductImage {
     data class DrawableImage(val resId: Int) : ProductImage()
-    data class UriImage(val uri: Uri) : ProductImage()
+    data class UrlImage(val url: String) : ProductImage()
 }

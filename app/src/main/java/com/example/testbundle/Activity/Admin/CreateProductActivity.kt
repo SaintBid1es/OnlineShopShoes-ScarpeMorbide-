@@ -13,12 +13,10 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import androidx.lifecycle.Observer
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.shoesonlineshop.activity.BaseActivity
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
@@ -27,18 +25,14 @@ import com.example.testbundle.ProductImage
 import com.example.testbundle.ProductViewModel
 import com.example.testbundle.R
 import com.example.testbundle.databinding.ActivityCreateProductBinding
-import com.example.testbundle.db.Brand
-import com.example.testbundle.db.MainDb
 import com.example.testbundle.db.Products
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 class CreateProductActivity : BaseActivity() {
     private lateinit var binding: ActivityCreateProductBinding
@@ -47,7 +41,7 @@ class CreateProductActivity : BaseActivity() {
     private lateinit var categoryAdapter: ArrayAdapter<String>
     private var selectedImagePosition = RecyclerView.NO_POSITION
 
-
+    // Теперь список будет хранить URL изображений с сервера (и Drawable для примера)
     private val imageList = mutableListOf<ProductImage>().apply {
         addAll(listOf(
             R.drawable.shoes1, R.drawable.shoes2, R.drawable.shoes3, R.drawable.shoes4,
@@ -56,27 +50,20 @@ class CreateProductActivity : BaseActivity() {
         ).map { ProductImage.DrawableImage(it) })
     }
 
-    // Контракты для запросов
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            openImagePicker()
-        } else {
-            showPermissionDeniedMessage()
-        }
+        if (isGranted) openImagePicker() else showPermissionDeniedMessage()
     }
 
     private val imagePicker = registerForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { handleSelectedImage(it) }
-    }
+    ) { uri -> uri?.let { uploadImageToServer(it) } }
+
     private val productApi = RetrofitClient.apiService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityCreateProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -85,21 +72,18 @@ class CreateProductActivity : BaseActivity() {
         setupCreateButton()
         setupBackButton()
 
-        binding.btnImage.setOnClickListener {
-            checkAndRequestPermission()
-        }
+        binding.btnImage.setOnClickListener { checkAndRequestPermission() }
         binding.imgCreateCategory.setOnClickListener {
-            startActivity(Intent(this@CreateProductActivity, BrandAndCategoryViewActivity::class.java))
+            startActivity(Intent(this, BrandAndCategoryViewActivity::class.java))
         }
         binding.imgCreateBrand.setOnClickListener {
-            startActivity(Intent(this@CreateProductActivity, BrandAndCategoryViewActivity::class.java))
+            startActivity(Intent(this, BrandAndCategoryViewActivity::class.java))
         }
     }
 
     private fun setupCreateButton() {
         binding.btnCreate.setOnClickListener {
             if (!validateInput()) return@setOnClickListener
-
             lifecycleScope.launch {
                 try {
                     val product = createProductFromInput()
@@ -119,34 +103,19 @@ class CreateProductActivity : BaseActivity() {
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
-
         when {
-            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED -> {
-                openImagePicker()
-            }
-            shouldShowRequestPermissionRationale(permission) -> {
-                showPermissionExplanation()
-            }
-            else -> {
-                requestPermissionLauncher.launch(permission)
-            }
+            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED -> openImagePicker()
+            shouldShowRequestPermissionRationale(permission) -> showPermissionExplanation()
+            else -> requestPermissionLauncher.launch(permission)
         }
     }
 
     private fun showPermissionExplanation() {
-        Toast.makeText(
-            this,
-            "Для выбора изображения необходимо разрешение на доступ к медиафайлам",
-            Toast.LENGTH_LONG
-        ).show()
+        Toast.makeText(this, "Для выбора изображения необходимо разрешение на доступ к медиафайлам", Toast.LENGTH_LONG).show()
     }
 
     private fun showPermissionDeniedMessage() {
-        Toast.makeText(
-            this,
-            "Разрешение отклонено. Вы можете изменить это в настройках приложения",
-            Toast.LENGTH_LONG
-        ).show()
+        Toast.makeText(this, "Разрешение отклонено. Вы можете изменить это в настройках приложения", Toast.LENGTH_LONG).show()
         openAppSettings()
     }
 
@@ -166,82 +135,43 @@ class CreateProductActivity : BaseActivity() {
         }
     }
 
-    private fun handleSelectedImage(uri: Uri) {
+    // Новый метод: загрузка изображения на сервер
+    private fun uploadImageToServer(uri: Uri) {
         lifecycleScope.launch {
             try {
-                // Сохраняем изображение во внутреннее хранилище
-                val imageFile = saveImageToInternalStorage(uri)
-                Log.d("ImageSave", "Image saved to: ${imageFile.absolutePath}")
+                // Получаем файл из Uri (копируем в cacheDir)
+                val file = withContext(Dispatchers.IO) {
+                    val inputStream = contentResolver.openInputStream(uri)
+                    val tempFile = File(cacheDir, "upload_${System.currentTimeMillis()}.jpg")
+                    inputStream?.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
+                    tempFile
+                }
+                val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                val multipartBody = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
-                // Создаем URI через FileProvider
-                val fileUri = FileProvider.getUriForFile(
-                    this@CreateProductActivity,
-                    "${packageName}.fileprovider",
-                    imageFile
-                )
+                val response = productApi.uploadImage(multipartBody)
 
-                // Добавляем в список
-                imageList.add(ProductImage.UriImage(fileUri))
-
-                // Обновляем UI
-                runOnUiThread {
-                    (binding.rcViewImage.adapter as? ProductCreateAdapter)?.apply {
-                        notifyItemInserted(imageList.size - 1)
-                        selectedImagePosition = imageList.size - 1
-                        setSelectedPosition(selectedImagePosition)
+                if (response.isSuccessful) {
+                    val url = response.body()?.url
+                    if (url != null) {
+                        imageList.add(ProductImage.UrlImage(url))
+                        withContext(Dispatchers.Main) {
+                            (binding.rcViewImage.adapter as? ProductCreateAdapter)?.notifyItemInserted(imageList.size - 1)
+                            selectedImagePosition = imageList.size - 1
+                            (binding.rcViewImage.adapter as? ProductCreateAdapter)?.setSelectedPosition(selectedImagePosition)
+                        }
+                    } else {
+                        showError(R.string.error, "Ошибка: сервер не вернул URL")
                     }
+                } else {
+                    showError(R.string.error, "Ошибка загрузки изображения: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("ImageError", "Failed to handle image", e)
-                runOnUiThread {
-                    Toast.makeText(
-                        this@CreateProductActivity,
-                        "Ошибка обработки изображения: ${e.localizedMessage}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                Log.e("UploadImage", "Error uploading image", e)
+                showError(R.string.error, "Ошибка загрузки изображения: ${e.localizedMessage}")
             }
         }
     }
-
-private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? = null): File =
-    withContext(Dispatchers.IO) {
-        val imagesDir = File(filesDir, "product_images").apply {
-            if (!exists()) mkdirs()
-        }
-
-        // Генерируем имя файла с учетом оригинального имени (если есть)
-        val fileName = originalName?.takeIf { it.isNotBlank() }?.let {
-            if (it.contains('.')) it else "$it.jpg"
-        } ?: "img_${System.currentTimeMillis()}.jpg"
-
-        val outputFile = File(imagesDir, fileName)
-
-        try {
-            // Читаем и сохраняем изображение
-            contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(outputFile).use { output ->
-                    input.copyTo(output)
-                    output.flush()
-                }
-            } ?: throw IOException("Не удалось открыть исходное изображение")
-
-            // Проверяем результат сохранения
-            when {
-                !outputFile.exists() -> throw IOException("Файл не был создан")
-                outputFile.length() == 0L -> {
-                    outputFile.delete()
-                    throw IOException("Файл сохранен как пустой")
-                }
-                else -> return@withContext outputFile
-            }
-        } catch (e: Exception) {
-            // Удаляем частично сохраненный файл в случае ошибки
-            if (outputFile.exists()) outputFile.delete()
-            throw e
-        }
-    }
-
 
     private fun setupImageRecycler() {
         binding.rcViewImage.apply {
@@ -254,40 +184,20 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
     }
 
     private suspend fun createProductFromInput(): Products {
-        // Получаем и валидируем данные
         val name = binding.etNameProduct.text.toString().takeIf { it.isNotBlank() }
             ?: throw IllegalArgumentException("Product name cannot be empty")
+        val cost = binding.etCost.text.toString().toDoubleOrNull() ?: throw IllegalArgumentException("Invalid price format")
+        val amount = binding.etAmount.text.toString().toIntOrNull() ?: throw IllegalArgumentException("Invalid amount format")
+        val brandName = binding.brandSpinner.selectedItem?.toString() ?: throw IllegalStateException("Brand not selected")
+        val categoryName = binding.categorySpinner.selectedItem?.toString() ?: throw IllegalStateException("Category not selected")
 
-        val cost = try {
-            binding.etCost.text.toString().toDouble()
-        } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("Invalid price format", e)
-        }
+        val brandId = productApi.getBrandByName(brandName)?.id ?: throw IllegalArgumentException("Brand '$brandName' not found")
+        val categoryId = productApi.getCategoryByName(categoryName)?.id ?: throw IllegalArgumentException("Category '$categoryName' not found")
 
-        val amount = try {
-            binding.etAmount.text.toString().toInt()
-        } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("Invalid amount format", e)
-        }
-
-        // Получаем выбранные бренд и категорию
-        val brandName = binding.brandSpinner.selectedItem?.toString()
-            ?: throw IllegalStateException("Brand not selected")
-        val categoryName = binding.categorySpinner.selectedItem?.toString()
-            ?: throw IllegalStateException("Category not selected")
-
-        // Получаем ID бренда и категории
-        val brandId = productApi.getBrandByName(brandName)?.id
-            ?: throw IllegalArgumentException("Brand '$brandName' not found")
-        val categoryId = productApi.getCategoryByName(categoryName)?.id
-            ?: throw IllegalArgumentException("Category '$categoryName' not found")
-
-        // Проверяем, что изображение выбрано
         if (selectedImagePosition == RecyclerView.NO_POSITION) {
             throw IllegalStateException("Please select an image")
         }
 
-        // Создаем продукт с правильным URI
         val selectedImage = imageList[selectedImagePosition]
         return when (selectedImage) {
             is ProductImage.DrawableImage -> Products(
@@ -301,20 +211,17 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
                 amount = amount,
                 imageuri = null
             )
-            is ProductImage.UriImage -> {
-                val fileName = File(selectedImage.uri.path ?: "").name
-                Products(
-                    name = name,
-                    cost = cost,
-                    description = binding.etDescription.text.toString(),
-                    size = null,
-                    imageid = 0,
-                    brandid = brandId,
-                    categoryid = categoryId,
-                    amount = amount,
-                    imageuri = fileName // Сохраняем только имя файла
-                )
-            }
+            is ProductImage.UrlImage -> Products(
+                name = name,
+                cost = cost,
+                description = binding.etDescription.text.toString(),
+                size = null,
+                imageid = 0,
+                brandid = brandId,
+                categoryid = categoryId,
+                amount = amount,
+                imageuri = selectedImage.url // Сохраняем URL сервера
+            )
         }
     }
 
@@ -340,13 +247,7 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
         }
     }
 
-    private fun isValidPrice(price: String): Boolean {
-        return try {
-            price.toDouble() > 0
-        } catch (e: NumberFormatException) {
-            false
-        }
-    }
+    private fun isValidPrice(price: String): Boolean = price.toDoubleOrNull()?.let { it > 0 } ?: false
 
     private fun showError(stringRes: Int, message: String? = null) {
         val errorText = message?.let { "${getString(stringRes)}: $it" } ?: getString(stringRes)
@@ -360,9 +261,7 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
     }
 
     private fun setupBackButton() {
-        binding.btnArrowBack.setOnClickListener {
-            finish()
-        }
+        binding.btnArrowBack.setOnClickListener { finish() }
     }
 
     private fun setupSpinners() {
@@ -376,28 +275,18 @@ private suspend fun saveImageToInternalStorage(uri: Uri, originalName: String? =
 
         lifecycleScope.launch {
             try {
-                // Загружаем бренды
                 val brands = productApi.getBrands()
                 withContext(Dispatchers.Main) {
                     brandAdapter.clear()
-                    brandAdapter.addAll(brands.map { it.namebrand.orEmpty() })
+                    brandAdapter.addAll(brands.map { it.namebrand })
                 }
-
-                // Загружаем категории
                 val categories = productApi.getCategories()
                 withContext(Dispatchers.Main) {
                     categoryAdapter.clear()
-                    categoryAdapter.addAll(categories.map { it.namecategory.orEmpty() })
+                    categoryAdapter.addAll(categories.map { it.namecategory })
                 }
             } catch (e: Exception) {
-                // Обработка ошибок
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@CreateProductActivity,
-                        "Ошибка загрузки данных",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                Log.e("SpinnerSetup", "Error loading brands/categories", e)
             }
         }
     }

@@ -1,10 +1,13 @@
 package com.example.testbundle.Adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.testbundle.R
 import com.example.testbundle.databinding.AccountItemBinding
 import com.example.testbundle.db.Item
@@ -21,7 +24,7 @@ class AccountCardAdapter(
         private val onDelete: (id: Int) -> Unit,
         private val onEdit: (item: Item) -> Unit
     ) : RecyclerView.ViewHolder(item) {
-
+        private lateinit var context: Context
         val binding = AccountItemBinding.bind(item)
         fun bind(item: Item) = with(binding) {
             tvInfAccount.text = itemView.context.getString(
@@ -32,9 +35,13 @@ class AccountCardAdapter(
                 itemView.context.getString(R.string.account_speciality), item.speciality // Speciality
             )
 
-
             if (!item.avatar.isNullOrEmpty()){
-                ivAvatar.setImageURI(item.avatar!!.toUri())
+                val uri = item.avatar
+                Glide.with(itemView.context)
+                    .load(uri)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .error(R.drawable.avatarmen)
+                    .into(ivAvatar)
             }else{
                 ivAvatar.setImageResource(R.drawable.avatarmen)
             }

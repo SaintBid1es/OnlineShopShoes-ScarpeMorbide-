@@ -33,6 +33,7 @@ class ReviewAdapter(
             val clientAvatar = clientAvatar[item.clientId]
             tvClientName.text = clientName
             tvTextReview.text = "${item.heading}\n ${item.description}\n ${item.rating}\n ${item.reviewdate}"
+
             if (clientAvatar!="null".toUri()) {
                 ivAvatar.setImageURI(clientAvatar)
             }else{

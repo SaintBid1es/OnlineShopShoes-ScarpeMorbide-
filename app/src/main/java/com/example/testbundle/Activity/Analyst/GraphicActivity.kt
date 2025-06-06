@@ -26,6 +26,7 @@
     import com.example.testbundle.databinding.ActivityGraphicBinding
     import com.example.testbundle.db.MainDb
     import com.example.testbundle.db.SalesData
+    import com.example.testbundle.withAuthToken
     import kotlinx.coroutines.Dispatchers
     import kotlinx.coroutines.Runnable
     import kotlinx.coroutines.delay
@@ -152,17 +153,25 @@
 
             delay(150)
             loadChartWithAnimation(6) {
-                val combinedStats = viewModelOrder.getCombinedBrandCategoryStatsOptimized()
-                combinedStatsObject = combinedStats
-                combinedStats.map {
-                    val label = when {
-                        it.first.startsWith("Бренд:") -> it.first.replace("Бренд:", "Бренд:") + " (${it.second})"
-                        it.first.startsWith("Категория:") -> it.first.replace("Категория:", "Категория:") + " (${it.second})"
-                        else -> it.first + " (${it.second})"
+                val token = authRepository.getAccessToken()!!
+                    val combinedStats = viewModelOrder.getCombinedBrandCategoryStatsOptimized(token)
+                    combinedStatsObject = combinedStats
+                    combinedStats.map {
+                        val label = when {
+                            it.first.startsWith("Бренд:") -> it.first.replace(
+                                "Бренд:",
+                                "Бренд:"
+                            ) + " (${it.second})"
+
+                            it.first.startsWith("Категория:") -> it.first.replace(
+                                "Категория:",
+                                "Категория:"
+                            ) + " (${it.second})"
+
+                            else -> it.first + " (${it.second})"
+                        }
+                        Pair(it.second, label)
                     }
-                    // Меняем местами Int и String
-                    Pair(it.second, label)
-                }
             }
 
             delay(150)

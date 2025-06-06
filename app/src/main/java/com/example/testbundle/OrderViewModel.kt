@@ -98,31 +98,32 @@ class OrderViewModel(
     // OrderViewModel.kt
 
     // Для статистики по брендам
-    suspend fun getBrandSalesStatistics(): List<Pair<String, Int>> {
-        val orderItems = productApi.getOrderItems()
-        val brandSales = mutableMapOf<String, Int>()  // Название бренда -> количество
-
-        orderItems.forEach { orderItem ->
-            val product = productApi.getProductsByID(orderItem.productid)
-            product?.brandid?.let { brandId ->
-                val brand = productApi.getBrandsByID(brandId)  // Получаем бренд по ID
-                brand?.namebrand?.let { brandName ->
-                    brandSales[brandName] = brandSales.getOrDefault(brandName, 0) + orderItem.quantity
-                }
-            }
-        }
-
-        return brandSales.entries.map { Pair(it.key, it.value) }
-    }
+//    suspend fun getBrandSalesStatistics(): List<Pair<String, Int>> {
+//        val orderItems = productApi.getOrderItems()
+//        val brandSales = mutableMapOf<String, Int>()  // Название бренда -> количество
+//
+//        orderItems.forEach { orderItem ->
+//            val product = productApi.getProductsByID(orderItem.productid)
+//            product?.brandid?.let { brandId ->
+//                val brand = productApi.getBrandsByID(brandId)  // Получаем бренд по ID
+//                brand?.namebrand?.let { brandName ->
+//                    brandSales[brandName] = brandSales.getOrDefault(brandName, 0) + orderItem.quantity
+//                }
+//            }
+//        }
+//
+//        return brandSales.entries.map { Pair(it.key, it.value) }
+//    }
 
 
     // OrderViewModel.kt
 
-    suspend fun getCombinedBrandCategoryStatsOptimized(): List<Pair<String, Int>> {
+    suspend fun getCombinedBrandCategoryStatsOptimized(token: String): List<Pair<String, Int>> {
         // Получаем все необходимые данные за один раз
         val orderItems = productApi.getOrderItems()
         val productIds = orderItems.map { it.productid }.distinct()
-         val products = productApi.GetProductsByIds(productIds)
+
+         val products = productApi.GetProductsByIds(productIds,token)
 
         val brandIds = products.mapNotNull { it.brandid }.distinct()
         val brands = productApi.GetBrandsByIds(brandIds).associateBy { it.id }

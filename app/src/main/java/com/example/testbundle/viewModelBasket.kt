@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
 import com.example.testbundle.Activity.DataStoreRepo
+import com.example.testbundle.Repository.AuthRepository
 import com.example.testbundle.Repository.BasketRepository
 import com.example.testbundle.Repository.ProductRepository
 import com.example.testbundle.db.Basket
@@ -55,11 +56,11 @@ class BasketViewModel(
     /**
      * Функция чистки корзины
      */
-    fun deleteItem() {
+    fun deleteItem(token: String) {
         viewModelScope.launch {
                 productApi.deleteTableBaskets()
         }
-        loadBasketItems()
+        loadBasketItems(token)
     }
 
     suspend fun isProductInBasket(productId: Int, userId: Int): Boolean {
@@ -103,15 +104,16 @@ class BasketViewModel(
     /**
      *  Функция добавления кол-ва товара в корзину
      */
-    fun increaseQuantity(productId: Int) {
+    fun increaseQuantity(productId: Int,token: String) {
         viewModelScope.launch {
             dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userId ->
                 val basketItem = productApi.getBasketItemByProduct(userId, productId)
-                val product = productApi.getProductsByID(productId)
+
+                val product = productApi.getProductsByID(productId,token)
                     if (product.amount>basketItem!!.countbasket) {
                         val updatedItem = basketItem.copy(countbasket = basketItem.countbasket + 1)
                         productApi.updateBaskets(updatedItem.id!!, updatedItem)
-                        loadBasketItems()
+                        loadBasketItems(token)
                     }
             }
         }
@@ -119,14 +121,14 @@ class BasketViewModel(
     /**
      *  Функция уменьшения кол-ва товара в корзины
      */
-    fun decreaseQuantity(productId: Int) {
+    fun decreaseQuantity(productId: Int,token: String) {
         viewModelScope.launch {
             dataStoreRepo.dataStoreFlow.first()[DataStoreRepo.USER_ID_KEY]?.let { userId ->
                 val basketItem = productApi.getBasketItemByProduct(userId, productId)
                 if (basketItem != null) {
                     val updatedItem = basketItem.copy(countbasket = basketItem.countbasket - 1)
                     productApi.updateBaskets(updatedItem.id!!,updatedItem)
-                    loadBasketItems()
+                    loadBasketItems(token)
                 }
             }
         }
@@ -168,7 +170,7 @@ class BasketViewModel(
 
 
 
-    private fun loadBasketItems() {
+    private fun loadBasketItems(token: String) {
         viewModelScope.launch {
             try {
                 // Получаем userId из DataStore
@@ -180,7 +182,7 @@ class BasketViewModel(
                 // Преобразуем в список BasketModel
                 val basketModels = basketItems.mapNotNull { basketItem ->
                     val product = try {
-                        productApi.getProductsByID(basketItem.productId)
+                        productApi.getProductsByID(basketItem.productId,token)
                     } catch (e: Exception) {
                         null // Пропускаем товары, которые не удалось загрузить
                     } ?: return@mapNotNull null
@@ -211,7 +213,8 @@ class BasketViewModel(
     }
 
     init {
-        loadBasketItems()
+        val repo = AuthRepository.getInstance()
+        loadBasketItems(repo.getAccessToken()!!)
     }
 
 

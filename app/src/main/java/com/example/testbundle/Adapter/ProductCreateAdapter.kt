@@ -1,6 +1,5 @@
 package com.example.testbundle.Adapter
 
-
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +12,7 @@ import com.example.testbundle.R
 import com.example.testbundle.databinding.ProductListHorizontalItemBinding
 
 class ProductCreateAdapter(
-    private val entities: List<ProductImage>,
+    private val images: List<ProductImage>,
     initialSelectedPosition: Int = RecyclerView.NO_POSITION,
     private val onProductSelected: (Int) -> Unit
 ) : RecyclerView.Adapter<ProductCreateAdapter.ProductHolder>() {
@@ -30,10 +29,8 @@ class ProductCreateAdapter(
             binding.checkbox.setOnCheckedChangeListener(null)
             loadImage(image)
             binding.checkbox.isChecked = isChecked
-            binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) {
-                    updateSelection(adapterPosition)
-                }
+            binding.checkbox.setOnCheckedChangeListener { _, checked ->
+                if (checked) updateSelection(adapterPosition)
             }
             itemView.setOnClickListener {
                 updateSelection(adapterPosition)
@@ -46,13 +43,14 @@ class ProductCreateAdapter(
                     is ProductImage.DrawableImage -> {
                         binding.ivProduct.setImageResource(image.resId)
                     }
-                    is ProductImage.UriImage -> {
+                    is ProductImage.UrlImage -> {
                         Glide.with(context)
-                            .load(image.uri)
+                            .load(image.url)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .error(R.drawable.avatarmen)
                             .into(binding.ivProduct)
                     }
+
                 }
             } catch (e: Exception) {
                 binding.ivProduct.setImageResource(R.drawable.avatarmen)
@@ -64,7 +62,6 @@ class ProductCreateAdapter(
                 lastSelectedPosition = selectedPosition
                 selectedPosition = position
                 onProductSelected(position)
-                // Заменяем notifySelectionChanged() на прямой вызов:
                 recyclerView?.post {
                     if (lastSelectedPosition != RecyclerView.NO_POSITION) {
                         notifyItemChanged(lastSelectedPosition)
@@ -93,16 +90,15 @@ class ProductCreateAdapter(
     }
 
     override fun onBindViewHolder(holder: ProductHolder, position: Int) {
-        holder.bind(entities[position], position == selectedPosition)
+        holder.bind(images[position], position == selectedPosition)
     }
 
-    override fun getItemCount(): Int = entities.size
+    override fun getItemCount(): Int = images.size
 
     fun setSelectedPosition(position: Int) {
-        if (position in 0 until entities.size && position != selectedPosition) {
+        if (position in 0 until images.size && position != selectedPosition) {
             lastSelectedPosition = selectedPosition
             selectedPosition = position
-
             recyclerView?.post {
                 if (lastSelectedPosition != RecyclerView.NO_POSITION) {
                     notifyItemChanged(lastSelectedPosition)

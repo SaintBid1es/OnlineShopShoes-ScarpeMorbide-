@@ -37,7 +37,11 @@ import java.io.IOException
 import androidx.core.net.toUri
 import com.example.testbundle.API.ApiService
 import com.example.testbundle.API.RetrofitClient
+import com.example.testbundle.withAuthToken
 import kotlinx.coroutines.CoroutineScope
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -132,87 +136,72 @@ class UpdateProductActivity : BaseActivity() {
     }
 
     private fun handleSelectedImage(uri: Uri) {
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // 1. Получаем оригинальное имя файла или генерируем новое
-                val originalFileName = withContext(Dispatchers.IO) {
-                    contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                        cursor.moveToFirst()
-                        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                        if (nameIndex >= 0) cursor.getString(nameIndex) else null
+                // Сохраняем изображение локально в filesDir/product_images
+                val file = saveImageToInternalStorage(uri, getFileNameFromUri(uri))
+
+                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val multipartBody = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+                val response = productApi.uploadImage(multipartBody)
+
+                if (!response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@UpdateProductActivity, "Ошибка загрузки: ${response.code()}", Toast.LENGTH_LONG).show()
                     }
+                    return@launch
                 }
 
-                // 2. Сохраняем изображение во внутреннее хранилище
-                val savedFile = saveImageToInternalStorage(uri, originalFileName)
-                Log.d("ImageSave", "Image saved to: ${savedFile.absolutePath}")
+                val imageUrl = response.body()?.url
+                if (imageUrl != null) {
+                    imageList.add(ProductImage.UrlImage(imageUrl))
+                    selectedImagePosition = imageList.size - 1
 
-                // 3. Создаем URI через FileProvider
-                val fileUri = FileProvider.getUriForFile(
-                    this@UpdateProductActivity,
-                    "${packageName}.fileprovider",
-                    savedFile
-                ).also {
-                    Log.d("ImageUri", "Created FileProvider URI: $it")
-                }
-
-                // 4. Удаляем старое изображение (если было выбрано и это пользовательское изображение)
-                if (selectedImagePosition != RecyclerView.NO_POSITION) {
-                    val oldImage = imageList[selectedImagePosition]
-                    if (oldImage is ProductImage.UriImage) {
-                        try {
-                            deleteImageFile(oldImage.uri)
-                            Log.d("ImageCleanup", "Old image deleted successfully")
-                        } catch (e: Exception) {
-                            Log.e("ImageCleanup", "Failed to delete old image", e)
-                            // Продолжаем работу даже если не удалось удалить старое изображение
+                    withContext(Dispatchers.Main) {
+                        (binding.rcViewImage.adapter as? ProductCreateAdapter)?.apply {
+                            notifyItemInserted(imageList.size - 1)
+                            setSelectedPosition(selectedImagePosition)
                         }
                     }
                 }
-
-                // 5. Добавляем новое изображение в список
-                val newImage = ProductImage.UriImage(fileUri)
-                imageList.add(newImage)
-                selectedImagePosition = imageList.size - 1
-
-                // 6. Обновляем UI
-                withContext(Dispatchers.Main) {
-                    (binding.rcViewImage.adapter as? ProductCreateAdapter)?.apply {
-                        notifyItemInserted(imageList.size - 1)
-                        setSelectedPosition(selectedImagePosition)
-                    }
-                }
-
-            } catch (e: IOException) {
-                Log.e("ImageError", "File operation failed", e)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@UpdateProductActivity,
-                        "Ошибка сохранения изображения: ${e.message ?: "файл не сохранен"}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            } catch (e: SecurityException) {
-                Log.e("ImageError", "Security violation", e)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@UpdateProductActivity,
-                        "Ошибка доступа к файлам. Проверьте разрешения",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
             } catch (e: Exception) {
-                Log.e("ImageError", "Unexpected error", e)
+                Log.e("ImageUpload", "Ошибка загрузки изображения", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@UpdateProductActivity,
-                        "Неизвестная ошибка при обработке изображения",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this@UpdateProductActivity, "Ошибка загрузки изображения", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
+
+
+    private fun getFileNameFromUri(uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex >= 0) {
+                        result = it.getString(nameIndex)
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result?.lastIndexOf('/')
+            if (cut != null && cut != -1) {
+                result = result?.substring(cut + 1)
+            }
+
+        }
+        return result
+    }
+
+
+
+
 
     private suspend fun deleteImageFile(uri: Uri) = withContext(Dispatchers.IO) {
         try {
@@ -229,7 +218,6 @@ class UpdateProductActivity : BaseActivity() {
                 if (!exists()) mkdirs()
             }
 
-            // Генерируем имя файла с учетом оригинального имени (если есть)
             val fileName = originalName?.takeIf { it.isNotBlank() }?.let {
                 if (it.contains('.')) it else "$it.jpg"
             } ?: "img_${System.currentTimeMillis()}.jpg"
@@ -237,7 +225,6 @@ class UpdateProductActivity : BaseActivity() {
             val outputFile = File(imagesDir, fileName)
 
             try {
-                // Читаем и сохраняем изображение
                 contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(outputFile).use { output ->
                         input.copyTo(output)
@@ -245,21 +232,18 @@ class UpdateProductActivity : BaseActivity() {
                     }
                 } ?: throw IOException("Не удалось открыть исходное изображение")
 
-                // Проверяем результат сохранения
-                when {
-                    !outputFile.exists() -> throw IOException("Файл не был создан")
-                    outputFile.length() == 0L -> {
-                        outputFile.delete()
-                        throw IOException("Файл сохранен как пустой")
-                    }
-                    else -> return@withContext outputFile
+                if (!outputFile.exists() || outputFile.length() == 0L) {
+                    if (outputFile.exists()) outputFile.delete()
+                    throw IOException("Файл не был создан или пуст")
                 }
+
+                return@withContext outputFile
             } catch (e: Exception) {
-                // Удаляем частично сохраненный файл в случае ошибки
                 if (outputFile.exists()) outputFile.delete()
                 throw e
             }
         }
+
 
     private fun setupSpinners() {
         brandAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item)
@@ -288,68 +272,43 @@ class UpdateProductActivity : BaseActivity() {
 
     private fun loadProductData(productId: Int) {
         lifecycleScope.launch {
-            try {
-                val product = productApi.getProductsByID(productId)
+            withAuthToken { token ->
+                try {
+                    val product = productApi.getProductsByID(productId, token)
+                    with(binding) {
+                        etNameProduct.setText(product.name)
+                        etDescription.setText(product.description)
+                        etCost.setText(product.cost.toString())
+                        etAmount.setText(product.amount.toString())
+                    }
 
-                with(binding) {
-                    etNameProduct.setText(product.name)
-                    etDescription.setText(product.description)
-                    etCost.setText(product.cost.toString())
-                    etAmount.setText(product.amount.toString())
+                    // Загрузка изображения продукта
+                    loadProductImage(product)
+
+                    // Установка выбранных значений в спиннерах
+                    setSpinnerSelections(product.brandid, product.categoryid)
+                } catch (e: Exception) {
+                    Log.e("UpdateProduct", "Error loading product", e)
+                    Toast.makeText(
+                        this@UpdateProductActivity,
+                        "Ошибка загрузки продукта", Toast.LENGTH_SHORT
+                    ).show()
                 }
-
-                // Загрузка изображения продукта
-                loadProductImage(product)
-
-                // Установка выбранных значений в спиннерах
-                setSpinnerSelections(product.brandid, product.categoryid)
-            } catch (e: Exception) {
-                Log.e("UpdateProduct", "Error loading product", e)
-                Toast.makeText(this@UpdateProductActivity,
-                    "Ошибка загрузки продукта", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private suspend fun loadProductImage(product: Products) {
-        // Если есть URI изображения
-        product.imageuri?.takeIf { it.isNotEmpty() }?.let { fileName ->
-            try {
-                val imagesDir = File(filesDir, "product_images")
-                val imageFile = File(imagesDir, fileName)
-
-                if (imageFile.exists() && imageFile.length() > 0) {
-                    val uri = FileProvider.getUriForFile(
-                        this@UpdateProductActivity,
-                        "${packageName}.fileprovider",
-                        imageFile
-                    )
-                    imageList.add(ProductImage.UriImage(uri))
-                    selectedImagePosition = imageList.size - 1
-                } else {
-                    Log.w("ImageLoad", "File not found or empty: ${imageFile.absolutePath}")
-                    // Используем стандартное изображение и помечаем для обновления
-                    imageList.add(ProductImage.DrawableImage(R.drawable.avatarmen))
-                    selectedImagePosition = imageList.size - 1
-                    // Удаляем несуществующую ссылку из базы данных
-                    lifecycleScope.launch {
-                      productApi.updateProductImage(product.id!!, 0, null,product)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("ImageLoad", "Error loading image URI", e)
-                imageList.add(ProductImage.DrawableImage(R.drawable.apple))
-                selectedImagePosition = imageList.size - 1
-            }
-        } ?: run {
-            // Если есть ID ресурса
-            if (product.imageid != 0) {
-                updateSelectedImage(product.imageid)
-            } else {
-                // Если нет изображения, добавляем placeholder
-                imageList.add(ProductImage.DrawableImage(R.drawable.star_ic))
-                selectedImagePosition = imageList.size - 1
-            }
+        val imageUri = product.imageuri
+        if (!imageUri.isNullOrEmpty()) {
+            val imageUrl = imageUri // замените на ваш путь
+            imageList.add(ProductImage.UrlImage(imageUrl))
+            selectedImagePosition = imageList.size - 1
+        } else if (product.imageid != 0) {
+            updateSelectedImage(product.imageid)
+        } else {
+            imageList.add(ProductImage.DrawableImage(R.drawable.star_ic))
+            selectedImagePosition = imageList.size - 1
         }
 
         runOnUiThread {
@@ -359,6 +318,7 @@ class UpdateProductActivity : BaseActivity() {
             }
         }
     }
+
 
     private fun updateSelectedImage(imageId: Int) {
         selectedImagePosition = imageList.indexOfFirst {
@@ -443,8 +403,8 @@ class UpdateProductActivity : BaseActivity() {
                 amount = amount,
                 imageuri = null
             )
-            is ProductImage.UriImage -> {
-                val fileName = File(selectedImage.uri.path ?: "").name
+            is ProductImage.UrlImage -> {
+                val fileName = selectedImage.url.substringAfterLast('/')
                 Products(
                     id = productId,
                     name = name,
@@ -458,6 +418,7 @@ class UpdateProductActivity : BaseActivity() {
                     imageuri = fileName
                 )
             }
+
         }
     }
 
